@@ -27,7 +27,10 @@ class pcap_packet(ctypes.Structure):
                 ('timestamp_ms', ctypes.c_uint),
                 ('capture_len', ctypes.c_uint),
                 ('packet_len', ctypes.c_uint),
-                ('packet', ctypes.c_char_p)]
+                ('packet', ctypes.POINTER(ctypes.c_char))]
+
+    def raw(self):
+        return None # TODO: unstub
 
 
 class pcap_savefile(object):
@@ -63,7 +66,8 @@ class pcap_savefile(object):
         if not 0 == len(self.packets):
             valid_packet = [valid_packet(pkt) for pkt in self.packets]
             assert False not in valid_packet, 'Invalid packets in savefile.'
-            return False
+            if False in valid_packet:
+                return False
         
         return True
 
@@ -86,9 +90,18 @@ Load and validate the header of a pcap file.
 def load_savefile(filename):
     file_h = open(filename)
 
+    print '[+] attempting to load %s' % (filename, )
     header = _load_savefile_header(file_h)
+    if __validate_header__(header):
+        print '[+] found valid header'
+    else:
+        print '[!] invalid savefile'
+        return None
+
     packets = _load_packets(file_h)
+    print '[+] loaded %d packets' % (len(packets), )
     sfile = pcap_savefile(header, packets)
+    print '[+] finished loading savefile.'
 
     return sfile
 
@@ -126,14 +139,20 @@ def _load_packets(file_h):
 
 def _read_a_packet(file_h):
     raw_packet_header = file_h.read(16)
-    #assert (not raw_packet_header == '') and (len(raw_packet_header) == 16),\
-    #`    'Unexpected end of per-packet header.'
+    if raw_packet_header == '':
+        return None
+    assert len(raw_packet_header) == 16, 'Unexpected end of per-packet header.'
 
     packet_header = struct.unpack('=IIII', raw_packet_header)
     (timestamp, timestamp_ms, capture_len, packet_len) = packet_header
-    raw_packet = file_h.read(capture_len)
-    assert len(raw_packet) == capture_len, 'Unexpected end of packet.'
+    #raw_packet = ctypes.create_string_buffer(file_h.read(capture_len))
+    raw_packet = ctypes.create_string_buffer(capture_len)
+    raw_packet.raw = file_h.read(capture_len)
+    #print ''.join(['%s '%(hex(ord(c)),) for c in raw_packet.raw])
+    #print capture_len, '-', len(raw_packet.raw)
+    assert len(raw_packet.raw) == capture_len, 'Unexpected end of packet.'
 
     packet = pcap_packet(timestamp, timestamp_ms, capture_len, packet_len, 
-                         raw_packet)
-    return packet
+                         ctypes.cast(raw_packet.raw, 
+                                     ctypes.POINTER(ctypes.c_char)))
+    return packet 
