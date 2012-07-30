@@ -3,12 +3,13 @@
 from distutils.core import setup
 
 setup(name='pypcapfile',
-      version='0.1',
+      version='0.2',
       description='libpcap savefile utilities',
       long_description='Pure Python package for reading and parsing libpcap ' +
                        'savefiles.',
       author='Kyle Isom',
       author_email='coder@kyleisom.net',
       url='https://bitbucket.org/kisom/pypcapfile',
+      scripts=['pcapfile_info',],
       packages=['pcapfile'])
 
