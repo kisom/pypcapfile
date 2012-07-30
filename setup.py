@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 
+import os
 from distutils.core import setup
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
 setup(name='pypcapfile',
-      version='0.3',
-      description='libpcap savefile utilities',
-      long_description='Pure Python package for reading and parsing libpcap ' +
-                       'savefiles.',
+      version='0.4.3',
+      description=('Pure Python package for reading and parsing libpcap '
+                       'savefiles.'),
+      long_description=read('README'),
       author='Kyle Isom',
       author_email='coder@kyleisom.net',
+      license='ISC',
       url='http://kisom.github.com/pypcapfile',
       scripts=['pcapfile_info',],
       packages=['pcapfile'])
