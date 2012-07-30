@@ -16,15 +16,18 @@ for validation.
                 ('snaplen', ctypes.c_uint),     # snapshot length
                 ('ll_type', ctypes.c_uint)]     # link layer header type
 
+
 def __unpack_header__(unpacked):
     hdr = struc
 
 
 class pcap_packet(ctypes.Structure):
-    _fields_ = [('timestamp', ctypes.c_int),
-                ('timestamp_ms', ctypes.c_int),
-                ('packet_len', ctypes.c_int),
+    _fields_ = [('timestamp', ctypes.c_uint),
+                ('timestamp_ms', ctypes.c_uint),
+                ('capture_len', ctypes.c_uint),
+                ('packet_len', ctypes.c_uint),
                 ('packet', ctypes.c_char_p)]
+
 
 class pcap_savefile(object):
     def __init__(self, header, packets = []):
@@ -65,6 +68,7 @@ Load and validate the header of a pcap file.
     else:
         return header
 
+
 def load_savefile(filename):
     file_h = open(filename)
 
@@ -93,7 +97,29 @@ def __validate_header__(header):
 
     return True
 
+
 def _load_packets(file_h):
     pkts = []
 
+    while True:
+        pkt = _read_a_packet(file_h)
+        if pkt:
+            pkts.append(pkt)
+        else:
+            break
+
     return pkts
+
+def _read_a_packet(file_h):
+    raw_packet_header = file_h.read(16)
+    #assert (not raw_packet_header == '') and (len(raw_packet_header) == 16),\
+    #`    'Unexpected end of per-packet header.'
+
+    packet_header = struct.unpack('=IIII', raw_packet_header)
+    (timestamp, timestamp_ms, capture_len, packet_len) = packet_header
+    raw_packet = file_h.read(capture_len)
+    assert len(raw_packet) == capture_len, 'Unexpected end of packet.'
+
+    packet = pcap_packet(timestamp, timestamp_ms, capture_len, packet_len, 
+                         raw_packet)
+    return packet
