@@ -2,6 +2,7 @@
 
 import ctypes
 import struct
+import sys
 
 class __pcap_header__(ctypes.Structure):
     """
@@ -34,11 +35,24 @@ class pcap_savefile(object):
         self.header = header
         self.packets = packets
         self.valid = None
+        self.byteorder = sys.byteorder
         
         if not self.__validate__():
             self.valid = False
         else:
             self.valid = True
+
+        assert self.valid, 'Invalid savefile.'
+
+        if header.magic == 0xa1b2c3d4:
+            self.byteorder = 'big'
+        elif header.magic == 0xd4c3b2a1:
+            self.byteorder = 'little'
+        else:
+            self.byteorder = 'unknown'
+
+        assert self.byteorder in [ 'little', 'big' ], 'Invalid byte order.'
+
 
     def __validate__(self):
         assert __validate_header__(self.header),  "Invalid header."
