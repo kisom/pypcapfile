@@ -7,6 +7,17 @@ import sys
 
 import linklayer
 
+VERBOSE = False
+
+
+def __TRACE__(msg, args=None):
+    if VERBOSE:
+        if args:
+            print msg % args
+        else:
+            print msg
+
+
 class __pcap_header__(ctypes.Structure):
     """
 C-struct representation of a savefile header. See __validate_header__
@@ -98,21 +109,24 @@ Load and validate the header of a pcap file.
         return header
 
 
-def load_savefile(filename):
-    file_h = open(filename)
+def load_savefile(filename, verbose = False):
+    global VERBOSE
+    VERBOSE = verbose
 
-    print '[+] attempting to load %s' % (filename, )
+    file_h = open(filename)
+    __TRACE__('[+] attempting to load %s', (filename, ))
+
     header = _load_savefile_header(file_h)
     if __validate_header__(header):
-        print '[+] found valid header'
+        __TRACE__('[+] found valid header')
     else:
-        print '[!] invalid savefile'
+        __TRACE__('[!] invalid savefile')
         return None
 
     packets = _load_packets(file_h, header)
-    print '[+] loaded %d packets' % (len(packets), )
+    __TRACE__('[+] loaded %d packets', (len(packets), ))
     sfile = pcap_savefile(header, packets)
-    print '[+] finished loading savefile.'
+    __TRACE__('[+] finished loading savefile.')
 
     return sfile
 
