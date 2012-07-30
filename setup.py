@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='pypcapfile',
-      version='0.2',
+      version='0.3',
       description='libpcap savefile utilities',
       long_description='Pure Python package for reading and parsing libpcap ' +
                        'savefiles.',
