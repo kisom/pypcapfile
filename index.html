@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Pypcapfile by kisom</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Pypcapfile</h1>
+        <p>Pure Python library for handling libpcap savefiles.</p>
+
+        <p class="view"><a href="https://github.com/kisom/pypcapfile">View the Project on GitHub <small>kisom/pypcapfile</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/kisom/pypcapfile/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/kisom/pypcapfile/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/kisom/pypcapfile">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>pypcapfile</h2>
+
+<p>pypcapfile is a pure Python library for handling libpcap savefiles. </p>
+
+<h3>Installation</h3>
+
+<p>The easiest way to install from <a href="http://pypi.python.org/pypi/pypcapfile/">pypi</a>:</p>
+
+<div class="highlight"><pre><span class="nv">$ </span>sudo pip install pypcapfile
+</pre></div>
+
+<p>Note that for pip, the package name is <code>pypcapfile</code>; in your code you will import <code>pcapfile</code>.</p>
+
+<h3>Overview</h3>
+
+<p>The core  functionality is implemented in pcapfile.savefile:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">sf</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'test.pcap'</span><span class="p">)</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">attempting</span> <span class="n">to</span> <span class="n">load</span> <span class="n">test</span><span class="o">.</span><span class="n">pcap</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">found</span> <span class="n">valid</span> <span class="n">header</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">loaded</span> <span class="mi">11</span> <span class="n">packets</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">finished</span> <span class="n">loading</span> <span class="n">savefile</span><span class="o">.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">sf</span>
+<span class="n">big</span><span class="o">-</span><span class="n">endian</span> <span class="n">capture</span> <span class="nb">file</span> <span class="n">version</span> <span class="mf">2.4</span>
+<span class="n">snapshot</span> <span class="n">length</span><span class="p">:</span> <span class="mi">65535</span>
+<span class="n">linklayer</span> <span class="nb">type</span><span class="p">:</span> <span class="n">LINKTYPE_ETHERNET</span>
+<span class="n">number</span> <span class="n">of</span> <span class="n">packets</span><span class="p">:</span> <span class="mi">11</span>
+<span class="o">&gt;&gt;&gt;</span>
+</pre></div>
+
+<p>You can a look at the packets in sf.packets:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="n">pkt</span> <span class="o">=</span> <span class="n">sf</span><span class="o">.</span><span class="n">packets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">raw</span><span class="p">()</span>
+<span class="o">&lt;</span><span class="n">binary</span> <span class="n">data</span> <span class="n">snipped</span><span class="o">&gt;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">p</span><span class="o">.</span><span class="n">timestamp</span>
+<span class="il">1343676707L</span>
+<span class="o">&gt;&gt;&gt;</span>
+</pre></div>
+
+<p>This is still in a pre-release state.</p>
+
+<h3>Future planned improvements:</h3>
+
+<ul>
+<li>Packet parsing (i.e. IP(pkt) or TCP(pkt)</li>
+<li>improved Sphinx-based documentation</li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/kisom">kisom</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
