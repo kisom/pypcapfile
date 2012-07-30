@@ -1,2 +1,6 @@
-likely to be here as test fodder
+#likely to be here as test fodder
 *.pcap
+MANIFEST
+build
+dist
+
