@@ -18,4 +18,17 @@ linklayer type: LINKTYPE_ETHERNET
 number of packets: 11
 >>>
 
+You can a look at the packets in sf.packets:
+>>> pkt = sf.packets[0]
+>>> p.raw()
+<binary data snipped>
+>>> p.timestamp
+1343676707L
+>>>
+
+This is still in a pre-release state.
+
+Future planned improvements:
+* Packet parsing (i.e. IP(pkt) or TCP(pkt)
+* improved Sphinx-based documentation
 
