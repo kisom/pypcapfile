@@ -1,0 +1,21 @@
+pypcapfile
+==========
+
+pypcapfile is a pure Python library for handling libpcap savefiles. 
+
+The core  functionality is implemented in pcapfile.savefile:
+
+>>> from pcapfile import savefile
+>>> sf = savefile.load_savefile('test.pcap')
+[+] attempting to load test.pcap
+[+] found valid header
+[+] loaded 11 packets
+[+] finished loading savefile.
+>>> print sf
+big-endian capture file version 2.4
+snapshot length: 65535
+linklayer type: LINKTYPE_ETHERNET
+number of packets: 11
+>>>
+
+
