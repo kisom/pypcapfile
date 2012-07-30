@@ -1,8 +1,11 @@
 # pypcapfile.savefile.py
 
+import binascii
 import ctypes
 import struct
 import sys
+
+import linklayer
 
 class __pcap_header__(ctypes.Structure):
     """
@@ -18,19 +21,16 @@ for validation.
                 ('ll_type', ctypes.c_uint)]     # link layer header type
 
 
-def __unpack_header__(unpacked):
-    hdr = struc
-
-
 class pcap_packet(ctypes.Structure):
-    _fields_ = [('timestamp', ctypes.c_uint),
+    _fields_ = [('header', ctypes.POINTER(__pcap_header__)),
+                ('timestamp', ctypes.c_uint),
                 ('timestamp_ms', ctypes.c_uint),
                 ('capture_len', ctypes.c_uint),
                 ('packet_len', ctypes.c_uint),
-                ('packet', ctypes.POINTER(ctypes.c_char))]
+                ('packet', ctypes.c_char_p)]
 
     def raw(self):
-        return None # TODO: unstub
+        return binascii.unhexlify(self.packet)
 
 
 class pcap_savefile(object):
@@ -71,6 +71,17 @@ class pcap_savefile(object):
         
         return True
 
+    def __repr__(self):
+        string = '%s-endian capture file version %d.%d\n'
+        string += 'snapshot length: %d\n'
+        string += 'linklayer type: %s\nnumber of packets: %d\n'
+        string = string % (self.byteorder, self.header.major, 
+                           self.header.minor, self.header.snaplen,
+                           linklayer.lookup(self.header.ll_type),
+                           len(self.packets))
+        return string
+
+
 
 def _load_savefile_header(file_h):
     """
@@ -98,7 +109,7 @@ def load_savefile(filename):
         print '[!] invalid savefile'
         return None
 
-    packets = _load_packets(file_h)
+    packets = _load_packets(file_h, header)
     print '[+] loaded %d packets' % (len(packets), )
     sfile = pcap_savefile(header, packets)
     print '[+] finished loading savefile.'
@@ -125,11 +136,12 @@ def __validate_header__(header):
     return True
 
 
-def _load_packets(file_h):
+def _load_packets(file_h, header):
     pkts = []
 
+    hdrp = ctypes.pointer(header)
     while True:
-        pkt = _read_a_packet(file_h)
+        pkt = _read_a_packet(file_h, hdrp)
         if pkt:
             pkts.append(pkt)
         else:
@@ -137,7 +149,8 @@ def _load_packets(file_h):
 
     return pkts
 
-def _read_a_packet(file_h):
+
+def _read_a_packet(file_h, hdrp):
     raw_packet_header = file_h.read(16)
     if raw_packet_header == '':
         return None
@@ -145,14 +158,27 @@ def _read_a_packet(file_h):
 
     packet_header = struct.unpack('=IIII', raw_packet_header)
     (timestamp, timestamp_ms, capture_len, packet_len) = packet_header
-    #raw_packet = ctypes.create_string_buffer(file_h.read(capture_len))
-    raw_packet = ctypes.create_string_buffer(capture_len)
-    raw_packet.raw = file_h.read(capture_len)
-    #print ''.join(['%s '%(hex(ord(c)),) for c in raw_packet.raw])
-    #print capture_len, '-', len(raw_packet.raw)
-    assert len(raw_packet.raw) == capture_len, 'Unexpected end of packet.'
+    raw_packet_data = file_h.read(capture_len)
 
-    packet = pcap_packet(timestamp, timestamp_ms, capture_len, packet_len, 
-                         ctypes.cast(raw_packet.raw, 
-                                     ctypes.POINTER(ctypes.c_char)))
+    # if the capture file is not the same endianness as ours, we need to
+    # reverse the packet data
+    if not __endian_check__(hdrp):
+        raw_packet_data = raw_packet_data[::-1]
+    assert len(raw_packet_data) == capture_len, 'Unexpected end of packet.'
+
+    packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len, 
+                         packet_len, __pack_packet__(raw_packet_data))
     return packet 
+
+
+def __pack_packet__(packet):
+    return ctypes.c_char_p(binascii.hexlify(packet))
+
+
+def __endian_check__(hdrp):
+    if hdrp[0].magic == 0xa1b2c3d4:
+        return True
+    elif hdrp[0].magic == 0xd4c3b2a1:
+        return False
+    assert False, 'failed endian check.'
+
