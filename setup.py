@@ -9,5 +9,6 @@ setup(name='pypcapfile',
                        'savefiles.',
       author='Kyle Isom',
       author_email='coder@kyleisom.net',
-      packages=['pypcapfile'])
+      url='https://bitbucket.org/kisom/pypcapfile',
+      packages=['pcapfile'])
 
