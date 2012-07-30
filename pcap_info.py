@@ -5,7 +5,7 @@ from pcapfile import savefile
 from pcapfile import linklayer
 
 def pcap_info(pcap_file):
-    sf = savefile.load_savefile(pcap_file)
+    sf = savefile.load_savefile(pcap_file, verbose=False)
 
     if sf.valid:
         print sf
