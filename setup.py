@@ -9,7 +9,7 @@ setup(name='pypcapfile',
                        'savefiles.',
       author='Kyle Isom',
       author_email='coder@kyleisom.net',
-      url='https://bitbucket.org/kisom/pypcapfile',
+      url='http://kisom.github.com/pypcapfile',
       scripts=['pcapfile_info',],
       packages=['pcapfile'])
 
