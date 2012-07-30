@@ -10,7 +10,7 @@ def pcap_info(pcap_file):
     if sf.valid:
         print 'Packet capture file with format %u.%u:' % (sf.header.major,
                                                           sf.header.minor)
-        print '\tbyte order: %s endian' % (sf.header.byteorder,)
+        print '\tbyte order: %s endian' % (sf.byteorder,)
         print '\tsnapshot length: %u' % (sf.header.snaplen,)
         print '\tlink layer type: %s' % (linklayer.lookup(sf.header.ll_type), )
     else:
