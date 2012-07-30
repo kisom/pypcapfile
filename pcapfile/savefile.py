@@ -148,7 +148,6 @@ def load_savefile(filename, verbose = False):
         __TRACE__('[+] loaded %d packets', (len(packets), ))
         sfile = pcap_savefile(header, packets)
         __TRACE__('[+] finished loading savefile.')
-
     else:
         __TRACE__('[!] invalid savefile')
         return None
