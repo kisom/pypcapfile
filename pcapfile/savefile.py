@@ -33,6 +33,13 @@ for validation.
 
 
 class pcap_packet(ctypes.Structure):
+    """
+    ctypes Structure representation of a packet. The header field is a pointer
+    to the header of the savefile the packet came from to provide context. It
+    can be accessed with header[0]. By default, the raw packet is stored in
+    a string of hexadecimal-encoded bytes as the packet field. The raw()
+    method will return the raw binary packet.
+    """
     _fields_ = [('header', ctypes.POINTER(__pcap_header__)),
                 ('timestamp', ctypes.c_uint),
                 ('timestamp_ms', ctypes.c_uint),
@@ -41,10 +48,22 @@ class pcap_packet(ctypes.Structure):
                 ('packet', ctypes.c_char_p)]
 
     def raw(self):
+        """
+        Return the raw binary data from the packet.
+        """
         return binascii.unhexlify(self.packet)
+
+    def __repr__(self):
+        return self.raw()
 
 
 class pcap_savefile(object):
+    """
+    Represents a libpcap savefile. The packets member is a list of pcap_packet
+    instances. The 'valid' member will be None for an uninitialised instance,
+    False if the initial validation fails, or True if the instance has been
+    successfully set up and the file has been parsed.
+    """
     def __init__(self, header, packets = []):
         self.header = header
         self.packets = packets
@@ -110,7 +129,13 @@ Load and validate the header of a pcap file.
 
 
 def load_savefile(filename, verbose = False):
+    """
+    Load and parse a savefile as a pcap_savefile instance. Returns the savefile
+    on success and None on failure. Verbose mode prints additional information
+    about the file's processing.
+    """
     global VERBOSE
+    old_verbose = VERBOSE
     VERBOSE = verbose
 
     file_h = open(filename)
@@ -119,14 +144,14 @@ def load_savefile(filename, verbose = False):
     header = _load_savefile_header(file_h)
     if __validate_header__(header):
         __TRACE__('[+] found valid header')
+        packets = _load_packets(file_h, header)
+        __TRACE__('[+] loaded %d packets', (len(packets), ))
+        sfile = pcap_savefile(header, packets)
+        __TRACE__('[+] finished loading savefile.')
+
     else:
         __TRACE__('[!] invalid savefile')
         return None
-
-    packets = _load_packets(file_h, header)
-    __TRACE__('[+] loaded %d packets', (len(packets), ))
-    sfile = pcap_savefile(header, packets)
-    __TRACE__('[+] finished loading savefile.')
 
     return sfile
 
