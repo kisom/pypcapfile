@@ -1,14 +1,20 @@
 #!/usr/bin/env python
+"""
+Command-line utility to dump information about a pcap file.
+"""
 
 import sys
 from pcapfile import savefile
-from pcapfile import linklayer
 
 def pcap_info(pcap_file):
-    sf = savefile.load_savefile(pcap_file, verbose=False)
+    """
+    Main function to read and display information about a libpcap
+    savefile.
+    """
+    capfile = savefile.load_savefile(pcap_file, verbose=False)
 
-    if sf.valid:
-        print sf
+    if capfile.valid:
+        print capfile 
     else:
         print 'Invalid packet capture!'
 
