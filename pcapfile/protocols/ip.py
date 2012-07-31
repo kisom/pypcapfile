@@ -25,13 +25,18 @@ class IP(ctypes.Structure):
                 ('src', ctypes.c_char_p),       # source address
                 ('dst', ctypes.c_char_p),       # destination address
                 ('opt', ctypes.c_char_p),       # IP options
-                ('pad', ctypes.c_char_p)]       # padding bytes
+                ('pad', ctypes.c_char_p),       # padding bytes
+                ('payload', ctypes.c_char_p)]   # packet payload
 
     def __init__(self, packet):
         # parse the required header first, deal with options later
+        magic = struct.unpack('B', packet[0])[0]
+        assert ((magic & 0b1100) == 4 
+                and (magic & 0b0111) > 4), 'not an IPv4 packet.'
+
         fields = struct.unpack(IP.packfmt, packet[:20])
-        self.v = int(hex(fields[0])[2], 16)
-        self.hl = int(hex(fields[0])[3], 16) * 4
+        self.v = fields[0] & 0b1100
+        self.hl = fields[0] & 0b0111
         self.tos = fields[1]
         self.len = fields[2]
         self.id = fields[3]
@@ -49,6 +54,7 @@ class IP(ctypes.Structure):
             self.opt = binascii.hexlify(packet[start:end])
         else:
             self.opt = '\x00'
+            self.payload = binascii.hexlify(packet[0x15:])
     
         self.pad = '\x00'
 
