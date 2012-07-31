@@ -69,7 +69,9 @@ class pcap_savefile(object):
     False if the initial validation fails, or True if the instance has been
     successfully set up and the file has been parsed.
     """
-    def __init__(self, header, packets=[]):
+    def __init__(self, header, packets=None):
+        if not packets:
+            packets = []
         self.header = header
         self.packets = packets
         self.valid = None
