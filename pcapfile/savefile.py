@@ -1,11 +1,16 @@
 # pypcapfile.savefile.py
+"""
+Core functionality for reading and parsing libpcap savefiles. This contains
+the core classes pcap_packet and pcap_savefile, as well as the core function
+load_savefile.
+"""
 
 import binascii
 import ctypes
 import struct
 import sys
 
-import linklayer
+import pcapfile.linklayer as linklayer
 
 VERBOSE = False
 
@@ -64,12 +69,12 @@ class pcap_savefile(object):
     False if the initial validation fails, or True if the instance has been
     successfully set up and the file has been parsed.
     """
-    def __init__(self, header, packets = []):
+    def __init__(self, header, packets=[]):
         self.header = header
         self.packets = packets
         self.valid = None
         self.byteorder = sys.byteorder
-        
+
         if not self.__validate__():
             self.valid = False
         else:
@@ -84,33 +89,31 @@ class pcap_savefile(object):
         else:
             self.byteorder = 'unknown'
 
-        assert self.byteorder in [ 'little', 'big' ], 'Invalid byte order.'
-
+        assert self.byteorder in ['little', 'big'], 'Invalid byte order.'
 
     def __validate__(self):
         assert __validate_header__(self.header),  "Invalid header."
         if not __validate_header__(self.header):
             return False
-        
-        valid_packet = lambda pkt: type(pkt) == pcap_packet or pkt == None
+
+        valid_packet = lambda pkt: type(pkt) == pcap_packet or pkt is None
         if not 0 == len(self.packets):
             valid_packet = [valid_packet(pkt) for pkt in self.packets]
             assert False not in valid_packet, 'Invalid packets in savefile.'
             if False in valid_packet:
                 return False
-        
+
         return True
 
     def __repr__(self):
         string = '%s-endian capture file version %d.%d\n'
         string += 'snapshot length: %d\n'
         string += 'linklayer type: %s\nnumber of packets: %d\n'
-        string = string % (self.byteorder, self.header.major, 
+        string = string % (self.byteorder, self.header.major,
                            self.header.minor, self.header.snaplen,
                            linklayer.lookup(self.header.ll_type),
                            len(self.packets))
         return string
-
 
 
 def _load_savefile_header(file_h):
@@ -120,7 +123,7 @@ Load and validate the header of a pcap file.
     raw_savefile_header = file_h.read(24)
     unpacked = struct.unpack('=IhhIIII', raw_savefile_header)
     (magic, major, minor, tz_off, ts_acc, snaplen, ll_type) = unpacked
-    header = __pcap_header__(magic, major, minor, tz_off, ts_acc, snaplen, 
+    header = __pcap_header__(magic, major, minor, tz_off, ts_acc, snaplen,
                              ll_type)
     if not __validate_header__(header):
         raise Exception('invalid savefile header!')
@@ -128,7 +131,7 @@ Load and validate the header of a pcap file.
         return header
 
 
-def load_savefile(filename, verbose = False):
+def load_savefile(filename, verbose=False):
     """
     Load and parse a savefile as a pcap_savefile instance. Returns the savefile
     on success and None on failure. Verbose mode prints additional information
@@ -150,8 +153,9 @@ def load_savefile(filename, verbose = False):
         __TRACE__('[+] finished loading savefile.')
     else:
         __TRACE__('[!] invalid savefile')
-        return None
+        sfile = None
 
+    VERBOSE = old_verbose
     return sfile
 
 
@@ -163,7 +167,7 @@ def __validate_header__(header):
         if not header.magic == 0xd4c3b2a1:
             return False
 
-    # as of savefile format 2.4, 'a 4-byte time zone offset; this 
+    # as of savefile format 2.4, 'a 4-byte time zone offset; this
     # is always 0'; the same is true of the timestamp accuracy.
     if not header.tz_off == 0:
         return False
@@ -175,6 +179,10 @@ def __validate_header__(header):
 
 
 def _load_packets(file_h, header):
+    """
+    Read packets from the capture file. Expects the file handle to point to
+    the location immediately after the header (24 bytes).
+    """
     pkts = []
 
     hdrp = ctypes.pointer(header)
@@ -189,6 +197,11 @@ def _load_packets(file_h, header):
 
 
 def _read_a_packet(file_h, hdrp):
+    """
+    Reads the next individual packet from the capture file. Expects
+    the file handle to be somewhere after the header, on the next
+    per-packet header.
+    """
     raw_packet_header = file_h.read(16)
     if raw_packet_header == '':
         return None
@@ -204,9 +217,9 @@ def _read_a_packet(file_h, hdrp):
         raw_packet_data = raw_packet_data[::-1]
     assert len(raw_packet_data) == capture_len, 'Unexpected end of packet.'
 
-    packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len, 
+    packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len,
                          packet_len, __pack_packet__(raw_packet_data))
-    return packet 
+    return packet
 
 
 def __pack_packet__(packet):
@@ -219,4 +232,3 @@ def __endian_check__(hdrp):
     elif hdrp[0].magic == 0xd4c3b2a1:
         return False
     assert False, 'failed endian check.'
-
