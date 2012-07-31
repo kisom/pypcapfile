@@ -3,7 +3,7 @@ pypcapfile
 
 pypcapfile is a pure Python library for handling libpcap savefiles. 
 
-The core  functionality is implemented in pcapfile.savefile:
+The core functionality is implemented in pcapfile.savefile:
 
 >>> from pcapfile import savefile
 >>> sf = savefile.load_savefile('test.pcap')
