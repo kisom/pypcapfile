@@ -34,7 +34,8 @@ for validation.
                 ('tz_off', ctypes.c_uint),      # timezone offset
                 ('ts_acc', ctypes.c_uint),      # timestamp accuracy
                 ('snaplen', ctypes.c_uint),     # snapshot length
-                ('ll_type', ctypes.c_uint)]     # link layer header type
+                ('ll_type', ctypes.c_uint),     # link layer header type
+                ('byteorder', ctypes.c_char_p)] # byte order specifier
 
 
 class pcap_packet(ctypes.Structure):
@@ -84,14 +85,6 @@ class pcap_savefile(object):
 
         assert self.valid, 'Invalid savefile.'
 
-        if header.magic == 0xa1b2c3d4:
-            self.byteorder = 'big'
-        elif header.magic == 0xd4c3b2a1:
-            self.byteorder = 'little'
-        else:
-            self.byteorder = 'unknown'
-
-        assert self.byteorder in ['little', 'big'], 'Invalid byte order.'
 
     def __validate__(self):
         assert __validate_header__(self.header),  "Invalid header."
@@ -111,7 +104,7 @@ class pcap_savefile(object):
         string = '%s-endian capture file version %d.%d\n'
         string += 'snapshot length: %d\n'
         string += 'linklayer type: %s\nnumber of packets: %d\n'
-        string = string % (self.byteorder, self.header.major,
+        string = string % (self.header.byteorder, self.header.major,
                            self.header.minor, self.header.snaplen,
                            linklayer.lookup(self.header.ll_type),
                            len(self.packets))
@@ -123,10 +116,16 @@ def _load_savefile_header(file_h):
 Load and validate the header of a pcap file.
     """
     raw_savefile_header = file_h.read(24)
+    if raw_savefile_header[:4] == '\xa1\xb2\xc3\xd4':
+        byte_order = 'big'
+    elif raw_savefile_header[:4] == '\xd4\xc3\xb2\xa1':
+        byte_order = 'little'
+    else:
+        byte_order = None
     unpacked = struct.unpack('=IhhIIII', raw_savefile_header)
     (magic, major, minor, tz_off, ts_acc, snaplen, ll_type) = unpacked
     header = __pcap_header__(magic, major, minor, tz_off, ts_acc, snaplen,
-                             ll_type)
+                             ll_type, ctypes.c_char_p(byte_order))
     if not __validate_header__(header):
         raise Exception('invalid savefile header!')
     else:
@@ -168,6 +167,8 @@ def __validate_header__(header):
     if not header.magic == 0xa1b2c3d4:
         if not header.magic == 0xd4c3b2a1:
             return False
+
+    assert header.byteorder in ['little', 'big'], 'Invalid byte order.'
 
     # as of savefile format 2.4, 'a 4-byte time zone offset; this
     # is always 0'; the same is true of the timestamp accuracy.

@@ -3,10 +3,36 @@ pypcapfile
 
 pypcapfile is a pure Python library for handling libpcap savefiles. 
 
+
+Installing
+----------
+
+The easiest way to install is from 
+[pypi](http://pypi.python.org/pypi/pypcapfile/):
+
+    sudo pip install pypcapfile
+
+Note that for pip, the package name is `pypcapfile`; in your code you will need to 
+import `pcapfile`.
+
+Alternatively, you can install from source. Clone the repository, and run setup.py with 
+an install argument:
+
+    git clone git://github.com/kisom/pypcapfile.git
+    cd pypcapfile
+    ./setup.py install
+
+This does require the Python [distutils](http://docs.python.org/install/) to be
+installed.
+
+
+Introduction
+------------
+
 The core functionality is implemented in pcapfile.savefile:
 
 >>> from pcapfile import savefile
->>> sf = savefile.load_savefile('test.pcap')
+>>> sf = savefile.load_savefile('test.pcap', verbose=True)
 [+] attempting to load test.pcap
 [+] found valid header
 [+] loaded 11 packets
@@ -20,15 +46,45 @@ number of packets: 11
 
 You can a look at the packets in sf.packets:
 >>> pkt = sf.packets[0]
->>> p.raw()
+>>> pkt.raw()
 <binary data snipped>
->>> p.timestamp
+>>> pkt.timestamp
 1343676707L
 >>>
 
-This is still in a pre-release state.
+Right now there is very basic support for Ethernet frames and IPv4 packet 
+parsing. These are both in an alpha state while an architecture for properly
+recursively setting up packets (i.e. Ethernet(IP(TCP()))) can be figured
+out.
 
-Future planned improvements:
-* Packet parsing (i.e. IP(pkt) or TCP(pkt)
-* improved Sphinx-based documentation
+For example:
+>>> from pcapfile.protocols import ethernet, ip
+>>> eth_frame = ethernet.Ethernet(pkt.raw())
+>>> eth_frame.src, eth_frame.dst, eth_frame.type
+('ff:ee:dd:cc:bb:aa', '01:02:03:04:05:06', 2048)
+>>> import binascii
+>>> ip_packet = ip.IP(binascii.unhexlify(eth_frame.payload))
+>>> ip_packet.src, ip_packet.dst, ip_packet.v, ip_packet.len
+('173.194.37.82', '192.168.2.47', 4, 60)
 
+The IPv4 module (`ip`) currently only supports basic IP headers, i.e. it 
+doesn't yet parse options or add in padding.
+
+
+Future planned improvements
+---------------------------
+
+* IP option handling
+* IPv6 support
+* TCP and UDP support
+* ARP support
+* Improved packet parsing (i.e. IP(pkt) or TCP(pkt)
+
+
+See also
+--------
+
+* The project's [PyPi page](http://pypi.python.org/pypi/pypcapfile).
+* The project's [Sphinx](http://sphinx.pocoo.org/) 
+[documentation on PyPI](http://packages.python.org/pypcapfile/)
+* The [libpcap homepage](http://www.tcpdump.org)

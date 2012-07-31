@@ -8,7 +8,7 @@ def read(fname):
 
 
 setup(name='pypcapfile',
-      version='0.4.3',
+      version='0.5.1',
       description=('Pure Python package for reading and parsing libpcap '
                        'savefiles.'),
       long_description=read('README'),
@@ -17,5 +17,5 @@ setup(name='pypcapfile',
       license='ISC',
       url='http://kisom.github.com/pypcapfile',
       scripts=['pcapfile_info',],
-      packages=['pcapfile'])
+      packages=['pcapfile', 'pcapfile.protocols'])
 
