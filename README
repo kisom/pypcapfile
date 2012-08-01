@@ -42,7 +42,6 @@ big-endian capture file version 2.4
 snapshot length: 65535
 linklayer type: LINKTYPE_ETHERNET
 number of packets: 11
->>>
 
 You can a look at the packets in sf.packets:
 >>> pkt = sf.packets[0]
@@ -50,7 +49,6 @@ You can a look at the packets in sf.packets:
 <binary data snipped>
 >>> pkt.timestamp
 1343676707L
->>>
 
 Right now there is very basic support for Ethernet frames and IPv4 packet 
 parsing. 
@@ -59,7 +57,7 @@ The `layers` argument to `load_savefile` determines how many layers to
 decode; the default value of 0 does no decoding, 1 will load only the link 
 layer, etc... For example, with no decoding:
 
->>> from pcapfile import savefile
+>> from pcapfile import savefile
 >>> from pcapfile.protocols.linklayer import ethernet
 >>> from pcapfile.protocols.network import ip
 >>> import binascii
@@ -72,8 +70,8 @@ layer, etc... For example, with no decoding:
 >>> print eth_frame
 ethernet from 68:a8:6d:01:7f:b6 to 00:18:e7:dc:e5:01 type IPv4
 >>> ip_packet = ip.IP(binascii.unhexlify(eth_frame.payload))
->>> ip_packet.src, ip_packet.dst, ip_packet.v, ip_packet.len
-('192.168.2.47', '173.194.37.82', 4, 64)
+>>> print ip_packet
+ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
 
 and this example:
 >>> from pcapfile import savefile
@@ -106,6 +104,13 @@ Future planned improvements
 * IPv6 support
 * TCP and UDP support
 * ARP support
+
+
+TODO
+----
+0. write unit tests
+0. add repr method that shows all of the values of the fields in IP packets
+and Ethernet frames.
 
 
 See also
