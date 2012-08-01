@@ -53,22 +53,50 @@ You can a look at the packets in sf.packets:
 >>>
 
 Right now there is very basic support for Ethernet frames and IPv4 packet 
-parsing. These are both in an alpha state while an architecture for properly
-recursively setting up packets (i.e. Ethernet(IP(TCP()))) can be figured
-out.
+parsing. 
 
-For example:
->>> from pcapfile.protocols import ethernet, ip
->>> eth_frame = ethernet.Ethernet(pkt.raw())
->>> eth_frame.src, eth_frame.dst, eth_frame.type
-('ff:ee:dd:cc:bb:aa', '01:02:03:04:05:06', 2048)
+The `layers` argument to `load_savefile` determines how many layers to 
+decode; the default value of 0 does no decoding, 1 will load only the link 
+layer, etc... For example, with no decoding:
+
+>>> from pcapfile import savefile
+>>> from pcapfile.protocols.linklayer import ethernet
+>>> from pcapfile.protocols.network import ip
 >>> import binascii
+>>> capfile = savefile.load_savefile('samples/test.pcap', verbose=True)
+[+] attempting to load samples/test.pcap
+[+] found valid header
+[+] loaded 3 packets
+[+] finished loading savefile.
+>>> eth_frame = ethernet.Ethernet(capfile.packets[0].raw())
+>>> print eth_frame
+ethernet from 68:a8:6d:01:7f:b6 to 00:18:e7:dc:e5:01 type IPv4
 >>> ip_packet = ip.IP(binascii.unhexlify(eth_frame.payload))
 >>> ip_packet.src, ip_packet.dst, ip_packet.v, ip_packet.len
-('173.194.37.82', '192.168.2.47', 4, 60)
+('192.168.2.47', '173.194.37.82', 4, 64)
+
+and this example:
+>>> from pcapfile import savefile
+>>> capfile = savefile.load_savefile('samples/test.pcap', layers=1, verbose=True)
+[+] attempting to load samples/test.pcap
+[+] found valid header
+[+] loaded 3 packets
+[+] finished loading savefile.
+>>> print capfile.packets[0].packet.src
+00:11:22:33:44:55
+>>> print capfile.packets[0].packet.payload
+<hex string snipped>
+
+and lastly:
+>>> from pcapfile import savefile
+>>> capfile = savefile.load_savefile('samples/test.pcap', layers=2, verbose=True)
+>>> print capfile.packets[0].packet.payload
+ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
 
 The IPv4 module (`ip`) currently only supports basic IP headers, i.e. it 
 doesn't yet parse options or add in padding.
+
+The interface is still a bit messy.
 
 
 Future planned improvements
@@ -78,7 +106,6 @@ Future planned improvements
 * IPv6 support
 * TCP and UDP support
 * ARP support
-* Improved packet parsing (i.e. IP(pkt) or TCP(pkt)
 
 
 See also

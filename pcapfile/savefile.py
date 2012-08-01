@@ -12,6 +12,8 @@ import sys
 
 import pcapfile.linklayer as linklayer
 
+from pcapfile.structs import __pcap_header__, pcap_packet
+
 VERBOSE = False
 
 
@@ -21,46 +23,6 @@ def __TRACE__(msg, args=None):
             print msg % args
         else:
             print msg
-
-
-class __pcap_header__(ctypes.Structure):
-    """
-C-struct representation of a savefile header. See __validate_header__
-for validation.
-    """
-    _fields_ = [('magic', ctypes.c_uint),       # file magic number
-                ('major', ctypes.c_ushort),     # major version number
-                ('minor', ctypes.c_ushort),     # minor version number
-                ('tz_off', ctypes.c_uint),      # timezone offset
-                ('ts_acc', ctypes.c_uint),      # timestamp accuracy
-                ('snaplen', ctypes.c_uint),     # snapshot length
-                ('ll_type', ctypes.c_uint),     # link layer header type
-                ('byteorder', ctypes.c_char_p)] # byte order specifier
-
-
-class pcap_packet(ctypes.Structure):
-    """
-    ctypes Structure representation of a packet. The header field is a pointer
-    to the header of the savefile the packet came from to provide context. It
-    can be accessed with header[0]. By default, the raw packet is stored in
-    a string of hexadecimal-encoded bytes as the packet field. The raw()
-    method will return the raw binary packet.
-    """
-    _fields_ = [('header', ctypes.POINTER(__pcap_header__)),
-                ('timestamp', ctypes.c_uint),
-                ('timestamp_ms', ctypes.c_uint),
-                ('capture_len', ctypes.c_uint),
-                ('packet_len', ctypes.c_uint),
-                ('packet', ctypes.c_char_p)]
-
-    def raw(self):
-        """
-        Return the raw binary data from the packet.
-        """
-        return binascii.unhexlify(self.packet)
-
-    def __repr__(self):
-        return self.raw()
 
 
 class pcap_savefile(object):
@@ -91,7 +53,9 @@ class pcap_savefile(object):
         if not __validate_header__(self.header):
             return False
 
-        valid_packet = lambda pkt: type(pkt) == pcap_packet or pkt is None
+        # TODO: extended validation
+        valid_packet = lambda pkt: (pkt is not None or 
+                                    pkt.issubclass(ctypes.Structure))
         if not 0 == len(self.packets):
             valid_packet = [valid_packet(pkt) for pkt in self.packets]
             assert False not in valid_packet, 'Invalid packets in savefile.'
@@ -132,11 +96,12 @@ Load and validate the header of a pcap file.
         return header
 
 
-def load_savefile(filename, verbose=False):
+def load_savefile(filename, layers=0, verbose=False):
     """
     Load and parse a savefile as a pcap_savefile instance. Returns the savefile
     on success and None on failure. Verbose mode prints additional information
-    about the file's processing.
+    about the file's processing. layers defines how many layers to descend and
+    decode the packet.
     """
     global VERBOSE
     old_verbose = VERBOSE
@@ -148,7 +113,7 @@ def load_savefile(filename, verbose=False):
     header = _load_savefile_header(file_h)
     if __validate_header__(header):
         __TRACE__('[+] found valid header')
-        packets = _load_packets(file_h, header)
+        packets = _load_packets(file_h, header, layers)
         __TRACE__('[+] loaded %d packets', (len(packets), ))
         sfile = pcap_savefile(header, packets)
         __TRACE__('[+] finished loading savefile.')
@@ -181,7 +146,7 @@ def __validate_header__(header):
     return True
 
 
-def _load_packets(file_h, header):
+def _load_packets(file_h, header, layers=0):
     """
     Read packets from the capture file. Expects the file handle to point to
     the location immediately after the header (24 bytes).
@@ -190,7 +155,7 @@ def _load_packets(file_h, header):
 
     hdrp = ctypes.pointer(header)
     while True:
-        pkt = _read_a_packet(file_h, hdrp)
+        pkt = _read_a_packet(file_h, hdrp, layers)
         if pkt:
             pkts.append(pkt)
         else:
@@ -199,7 +164,7 @@ def _load_packets(file_h, header):
     return pkts
 
 
-def _read_a_packet(file_h, hdrp):
+def _read_a_packet(file_h, hdrp, layers=0):
     """
     Reads the next individual packet from the capture file. Expects
     the file handle to be somewhere after the header, on the next
@@ -220,13 +185,17 @@ def _read_a_packet(file_h, hdrp):
         raw_packet_data = raw_packet_data[::-1]
     assert len(raw_packet_data) == capture_len, 'Unexpected end of packet.'
 
+    if layers > 0:
+        layers -= 1
+        raw_packet = linklayer.clookup(hdrp[0].ll_type)(raw_packet_data, 
+                                                    layers=layers)
+    else:
+        raw_packet = binascii.hexlify(raw_packet_data)
+
     packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len,
-                         packet_len, __pack_packet__(raw_packet_data))
+                             packet_len, raw_packet)
     return packet
 
-
-def __pack_packet__(packet):
-    return ctypes.c_char_p(binascii.hexlify(packet))
 
 
 def __endian_check__(hdrp):

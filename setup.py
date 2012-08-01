@@ -17,5 +17,9 @@ setup(name='pypcapfile',
       license='ISC',
       url='http://kisom.github.com/pypcapfile',
       scripts=['pcapfile_info',],
-      packages=['pcapfile', 'pcapfile.protocols'])
+      packages=['pcapfile', 
+                'pcapfile.protocols',
+                'pcapfile.protocols.linklayer',
+                'pcapfile.protocols.network',
+                ])
 

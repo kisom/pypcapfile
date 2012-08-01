@@ -28,7 +28,7 @@ class IP(ctypes.Structure):
                 ('pad', ctypes.c_char_p),       # padding bytes
                 ('payload', ctypes.c_char_p)]   # packet payload
 
-    def __init__(self, packet):
+    def __init__(self, packet, layers=0):
         # parse the required header first, deal with options later
         magic = struct.unpack('B', packet[0])[0]
         assert ((magic & 0b1100) == 4
@@ -58,6 +58,11 @@ class IP(ctypes.Structure):
 
         self.pad = '\x00'
 
+    def __str__(self):
+        packet = 'ipv4 packet from %s to %s carrying %d bytes'
+        packet = packet % (self.src, self.dst, (len(self.payload) / 2))
+        return packet
+
 
 def parse_ipv4(address):
     """
@@ -82,3 +87,6 @@ def strip_ip(packet):
         payload = binascii.unhexlify(payload)
     return payload
 
+
+def __call__(packet):
+    return IP(packet)
