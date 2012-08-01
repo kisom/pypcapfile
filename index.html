@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Pypcapfile by kisom</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Pypcapfile</h1>
+        <p>Pure Python library for handling libpcap savefiles.</p>
+
+        <p class="view"><a href="https://github.com/kisom/pypcapfile">View the Project on GitHub <small>kisom/pypcapfile</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/kisom/pypcapfile/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/kisom/pypcapfile/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/kisom/pypcapfile">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>pypcapfile</h1>
+
+<p>pypcapfile is a pure Python library for handling libpcap savefiles. </p>
+
+<h2>Installing</h2>
+
+<p>The easiest way to install is from 
+<a href="http://pypi.python.org/pypi/pypcapfile/">pypi</a>:</p>
+
+<div class="highlight"><pre>sudo pip install pypcapfile
+</pre></div>
+
+<p>Note that for pip, the package name is <code>pypcapfile</code>; in your code you will need to 
+import <code>pcapfile</code>.</p>
+
+<p>Alternatively, you can install from source. Clone the repository, and run setup.py with 
+an install argument:</p>
+
+<div class="highlight"><pre>git clone git://github.com/kisom/pypcapfile.git
+<span class="nb">cd </span>pypcapfile
+./setup.py install
+</pre></div>
+
+<p>This does require the Python <a href="http://docs.python.org/install/">distutils</a> to be
+installed.</p>
+
+<h2>Introduction</h2>
+
+<p>The core functionality is implemented in <code>pcapfile.savefile</code>:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'test.pcap'</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">attempting</span> <span class="n">to</span> <span class="n">load</span> <span class="n">test</span><span class="o">.</span><span class="n">pcap</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">found</span> <span class="n">valid</span> <span class="n">header</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">loaded</span> <span class="mi">11</span> <span class="n">packets</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">finished</span> <span class="n">loading</span> <span class="n">savefile</span><span class="o">.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">capfile</span>
+<span class="n">little</span><span class="o">-</span><span class="n">endian</span> <span class="n">capture</span> <span class="nb">file</span> <span class="n">version</span> <span class="mf">2.4</span>
+<span class="n">snapshot</span> <span class="n">length</span><span class="p">:</span> <span class="mi">65535</span>
+<span class="n">linklayer</span> <span class="nb">type</span><span class="p">:</span> <span class="n">LINKTYPE_ETHERNET</span>
+<span class="n">number</span> <span class="n">of</span> <span class="n">packets</span><span class="p">:</span> <span class="mi">11</span>
+</pre></div>
+
+<p>You can take a look at the packets in <code>capfile.packets</code>:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="n">pkt</span> <span class="o">=</span> <span class="n">capfile</span><span class="o">.</span><span class="n">packets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pkt</span><span class="o">.</span><span class="n">raw</span><span class="p">()</span>
+<span class="o">&lt;</span><span class="n">binary</span> <span class="n">data</span> <span class="n">snipped</span><span class="o">&gt;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">pkt</span><span class="o">.</span><span class="n">timestamp</span>
+<span class="il">1343676707L</span>
+</pre></div>
+
+<p>Right now there is very basic support for Ethernet frames and IPv4 packet 
+parsing. </p>
+
+<h2>Automatically decoding layers</h2>
+
+<p>The <code>layers</code> argument to <code>load_savefile</code> determines how many layers to 
+decode; the default value of 0 does no decoding, 1 will load only the link 
+layer, etc... For example, with no decoding:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile.protocols.linklayer</span> <span class="kn">import</span> <span class="n">ethernet</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile.protocols.network</span> <span class="kn">import</span> <span class="n">ip</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">binascii</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">attempting</span> <span class="n">to</span> <span class="n">load</span> <span class="n">samples</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">pcap</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">found</span> <span class="n">valid</span> <span class="n">header</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">loaded</span> <span class="mi">3</span> <span class="n">packets</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">finished</span> <span class="n">loading</span> <span class="n">savefile</span><span class="o">.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">eth_frame</span> <span class="o">=</span> <span class="n">ethernet</span><span class="o">.</span><span class="n">Ethernet</span><span class="p">(</span><span class="n">capfile</span><span class="o">.</span><span class="n">packets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">raw</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">eth_frame</span>
+<span class="n">ethernet</span> <span class="kn">from</span> <span class="err">00:11:22:33:44:55</span> <span class="nn">to</span> <span class="nn">ff</span><span class="err">:</span><span class="nn">ee</span><span class="err">:</span><span class="nn">dd</span><span class="err">:</span><span class="nn">cc</span><span class="err">:</span><span class="nn">bb</span><span class="err">:</span><span class="nn">aa</span> <span class="nn">type</span> <span class="nn">IPv4</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">ip_packet</span> <span class="o">=</span> <span class="n">ip</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">eth_frame</span><span class="o">.</span><span class="n">payload</span><span class="p">))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">ip_packet</span>
+<span class="n">ipv4</span> <span class="n">packet</span> <span class="kn">from</span> <span class="err">192</span><span class="nn">.168.2.47</span> <span class="nn">to</span> <span class="err">173</span><span class="nn">.194.37.82</span> <span class="nn">carrying</span> <span class="err">44</span> <span class="nn">bytes</span>
+</pre></div>
+
+<p>and this example:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">attempting</span> <span class="n">to</span> <span class="n">load</span> <span class="n">samples</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">pcap</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">found</span> <span class="n">valid</span> <span class="n">header</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">loaded</span> <span class="mi">3</span> <span class="n">packets</span>
+<span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">finished</span> <span class="n">loading</span> <span class="n">savefile</span><span class="o">.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">capfile</span><span class="o">.</span><span class="n">packets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">packet</span><span class="o">.</span><span class="n">src</span>
+<span class="mo">00</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">22</span><span class="p">:</span><span class="mi">33</span><span class="p">:</span><span class="mi">44</span><span class="p">:</span><span class="mi">55</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">capfile</span><span class="o">.</span><span class="n">packets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">packet</span><span class="o">.</span><span class="n">payload</span>
+<span class="o">&lt;</span><span class="nb">hex</span> <span class="n">string</span> <span class="n">snipped</span><span class="o">&gt;</span>
+</pre></div>
+
+<p>and lastly:</p>
+
+<div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">capfile</span><span class="o">.</span><span class="n">packets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">packet</span><span class="o">.</span><span class="n">payload</span>
+<span class="n">ipv4</span> <span class="n">packet</span> <span class="kn">from</span> <span class="err">192</span><span class="nn">.168.2.47</span> <span class="nn">to</span> <span class="err">173</span><span class="nn">.194.37.82</span> <span class="nn">carrying</span> <span class="err">44</span> <span class="nn">bytes</span>
+</pre></div>
+
+<p>The IPv4 module (<code>ip</code>) currently only supports basic IP headers, i.e. it 
+doesn't yet parse options or add in padding.</p>
+
+<p>The interface is still a bit messy.</p>
+
+<h2>Future planned improvements</h2>
+
+<ul>
+<li>IP option handling</li>
+<li>IPv6 support</li>
+<li>TCP and UDP support</li>
+<li>ARP support</li>
+</ul><h2>TODO</h2>
+
+<ol>
+<li>write unit tests</li>
+<li>add <code>__repr__</code> method that shows all of the values of the fields in IP packets
+and Ethernet frames.</li>
+</ol><h2>See also</h2>
+
+<ul>
+<li>The project's <a href="http://pypi.python.org/pypi/pypcapfile">PyPi page</a>.</li>
+<li>The project's <a href="http://sphinx.pocoo.org/">Sphinx</a> 
+<a href="http://packages.python.org/pypcapfile/">documentation on PyPI</a>
+</li>
+<li>The <a href="http://www.tcpdump.org">libpcap homepage</a>
+</li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/kisom">kisom</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
