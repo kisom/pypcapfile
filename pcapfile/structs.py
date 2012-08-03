@@ -54,7 +54,13 @@ class pcap_packet(ctypes.Structure):
         return binascii.unhexlify(self.packet)
 
     def __repr__(self):
-        return self.raw()
+        if isinstance(self.packet, str):
+            try:
+                return self.raw()
+            except TypeError:
+                return str(self.packet)
+        else:
+            return str(self.packet)
 
 
 
