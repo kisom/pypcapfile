@@ -30,9 +30,9 @@ class Ethernet(ctypes.Structure):
         self.payload = payload
 
         if layers:
-            self.which_network(layers)
+            self.load_network(layers)
 
-    def which_network(self, layers=1):
+    def load_network(self, layers=1):
         """
         Given an Ethernet frame, determine the appropriate sub-protocol;
         If layers is greater than zerol determine the type of the payload
