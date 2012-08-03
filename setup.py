@@ -18,8 +18,10 @@ setup(name='pypcapfile',
       url='http://kisom.github.com/pypcapfile',
       scripts=['pcapfile_info',],
       packages=['pcapfile', 
+                'pcapfile.test',
                 'pcapfile.protocols',
                 'pcapfile.protocols.linklayer',
                 'pcapfile.protocols.network',
-                ])
+                ],
+      package_data={'pcapfile.test': ['test/test_data']})
 
