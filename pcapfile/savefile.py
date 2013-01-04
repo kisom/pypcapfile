@@ -96,9 +96,9 @@ Load and validate the header of a pcap file.
         return header
 
 
-def load_savefile(filename, layers=0, verbose=False):
+def load_savefile(input_file, layers=0, verbose=False):
     """
-    Load and parse a savefile as a pcap_savefile instance. Returns the savefile
+    Parse a savefile as a pcap_savefile instance. Returns the savefile
     on success and None on failure. Verbose mode prints additional information
     about the file's processing. layers defines how many layers to descend and
     decode the packet.
@@ -107,13 +107,12 @@ def load_savefile(filename, layers=0, verbose=False):
     old_verbose = VERBOSE
     VERBOSE = verbose
 
-    file_h = open(filename)
-    __TRACE__('[+] attempting to load %s', (filename, ))
+    __TRACE__('[+] attempting to load %s', (input_file.name, ))
 
-    header = _load_savefile_header(file_h)
+    header = _load_savefile_header(input_file)
     if __validate_header__(header):
         __TRACE__('[+] found valid header')
-        packets = _load_packets(file_h, header, layers)
+        packets = _load_packets(input_file, header, layers)
         __TRACE__('[+] loaded %d packets', (len(packets), ))
         sfile = pcap_savefile(header, packets)
         __TRACE__('[+] finished loading savefile.')
