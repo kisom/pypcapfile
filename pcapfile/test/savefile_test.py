@@ -27,7 +27,7 @@ class TestCase(unittest.TestCase):
 
     def init_capfile(self, layers=0):
         tfile = create_pcap()
-        self.capfile = savefile.load_savefile(tfile.name, layers=layers)
+        self.capfile = savefile.load_savefile(tfile, layers=layers)
         tfile.close()
         if os.path.exists(tfile.name):
             os.unlink(tfile.name)

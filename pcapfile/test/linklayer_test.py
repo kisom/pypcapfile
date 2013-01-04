@@ -17,7 +17,7 @@ class TestCase(unittest.TestCase):
     capfile = None
 
     def init_capfile(self, layers=0):
-        self.capfile = savefile.load_savefile('test_data/test.pcap', 
+        self.capfile = savefile.load_savefile(open('test_data/test.pcap', 'r'), 
                                               layers=layers)
 
     @classmethod
