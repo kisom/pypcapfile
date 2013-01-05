@@ -101,7 +101,7 @@ def load_savefile(input_file, layers=0, verbose=False):
     Parse a savefile as a pcap_savefile instance. Returns the savefile
     on success and None on failure. Verbose mode prints additional information
     about the file's processing. layers defines how many layers to descend and
-    decode the packet.
+    decode the packet. input_file should be a Python file object.
     """
     global VERBOSE
     old_verbose = VERBOSE
