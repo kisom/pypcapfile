@@ -37,7 +37,8 @@ The core functionality is implemented in `pcapfile.savefile`:
 
 ```python
 >>> from pcapfile import savefile
->>> capfile = savefile.load_savefile('test.pcap', verbose=True)
+>>> testcap = open('test.pcap')
+>>> capfile = savefile.load_savefile(testcap, verbose=True)
 [+] attempting to load test.pcap
 [+] found valid header
 [+] loaded 11 packets
@@ -73,7 +74,8 @@ layer, etc... For example, with no decoding:
 >>> from pcapfile.protocols.linklayer import ethernet
 >>> from pcapfile.protocols.network import ip
 >>> import binascii
->>> capfile = savefile.load_savefile('samples/test.pcap', verbose=True)
+>>> testcap = open('samples/test.pcap')
+>>> capfile = savefile.load_savefile(testcap, verbose=True)
 [+] attempting to load samples/test.pcap
 [+] found valid header
 [+] loaded 3 packets
@@ -90,7 +92,8 @@ and this example:
 
 ```python
 >>> from pcapfile import savefile
->>> capfile = savefile.load_savefile('samples/test.pcap', layers=1, verbose=True)
+>>> testcap = open('samples/test.pcap')
+>>> capfile = savefile.load_savefile(testcap, layers=1, verbose=True)
 [+] attempting to load samples/test.pcap
 [+] found valid header
 [+] loaded 3 packets
@@ -104,7 +107,8 @@ and this example:
 and lastly:
 ```python
 >>> from pcapfile import savefile
->>> capfile = savefile.load_savefile('samples/test.pcap', layers=2, verbose=True)
+>>> testcap = open('samples/test.pcap')
+>>> capfile = savefile.load_savefile(testcap, layers=2, verbose=True)
 >>> print capfile.packets[0].packet.payload
 ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
 ```
@@ -140,3 +144,10 @@ See also
 [documentation on PyPI](http://packages.python.org/pypcapfile/)
 * The [libpcap homepage](http://www.tcpdump.org)
 
+Contributors
+------------
+pycapfile was written by [Kyle Isom](https://github.com/kisom/).
+
+[Joshua Chia](https://github.com/jchia/) provided a patch to use the standard
+Python file objects instead of a path to the file; this allows transparent
+handling of certain types of compressed files.
