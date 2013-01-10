@@ -28,11 +28,7 @@
         </ul>
       </header>
       <section>
-        <h1>pypcapfile</h1>
-
-<p>pypcapfile is a pure Python library for handling libpcap savefiles. </p>
-
-<h2>Installing</h2>
+        <h2>Installing</h2>
 
 <p>The easiest way to install is from 
 <a href="http://pypi.python.org/pypi/pypcapfile/">pypi</a>:</p>
@@ -59,7 +55,8 @@ installed.</p>
 <p>The core functionality is implemented in <code>pcapfile.savefile</code>:</p>
 
 <div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'test.pcap'</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">testcap</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">'test.pcap'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="n">testcap</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">attempting</span> <span class="n">to</span> <span class="n">load</span> <span class="n">test</span><span class="o">.</span><span class="n">pcap</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">found</span> <span class="n">valid</span> <span class="n">header</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">loaded</span> <span class="mi">11</span> <span class="n">packets</span>
@@ -93,7 +90,8 @@ layer, etc... For example, with no decoding:</p>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile.protocols.linklayer</span> <span class="kn">import</span> <span class="n">ethernet</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile.protocols.network</span> <span class="kn">import</span> <span class="n">ip</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">binascii</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">testcap</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="n">testcap</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">attempting</span> <span class="n">to</span> <span class="n">load</span> <span class="n">samples</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">pcap</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">found</span> <span class="n">valid</span> <span class="n">header</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">loaded</span> <span class="mi">3</span> <span class="n">packets</span>
@@ -109,7 +107,8 @@ layer, etc... For example, with no decoding:</p>
 <p>and this example:</p>
 
 <div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">testcap</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="n">testcap</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">attempting</span> <span class="n">to</span> <span class="n">load</span> <span class="n">samples</span><span class="o">/</span><span class="n">test</span><span class="o">.</span><span class="n">pcap</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">found</span> <span class="n">valid</span> <span class="n">header</span>
 <span class="p">[</span><span class="o">+</span><span class="p">]</span> <span class="n">loaded</span> <span class="mi">3</span> <span class="n">packets</span>
@@ -123,7 +122,8 @@ layer, etc... For example, with no decoding:</p>
 <p>and lastly:</p>
 
 <div class="highlight"><pre><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">pcapfile</span> <span class="kn">import</span> <span class="n">savefile</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">testcap</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s">'samples/test.pcap'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">capfile</span> <span class="o">=</span> <span class="n">savefile</span><span class="o">.</span><span class="n">load_savefile</span><span class="p">(</span><span class="n">testcap</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="k">print</span> <span class="n">capfile</span><span class="o">.</span><span class="n">packets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">packet</span><span class="o">.</span><span class="n">payload</span>
 <span class="n">ipv4</span> <span class="n">packet</span> <span class="kn">from</span> <span class="err">192</span><span class="nn">.168.2.47</span> <span class="nn">to</span> <span class="err">173</span><span class="nn">.194.37.82</span> <span class="nn">carrying</span> <span class="err">44</span> <span class="nn">bytes</span>
 </pre></div>
@@ -155,7 +155,13 @@ and Ethernet frames.</li>
 </li>
 <li>The <a href="http://www.tcpdump.org">libpcap homepage</a>
 </li>
-</ul>
+</ul><h2>Contributors</h2>
+
+<p>pycapfile was written by <a href="https://github.com/kisom/">Kyle Isom</a>.</p>
+
+<p><a href="https://github.com/jchia/">Joshua Chia</a> provided a patch to use the standard
+Python file objects instead of a path to the file; this allows transparent
+handling of certain types of compressed files.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/kisom">kisom</a></p>
