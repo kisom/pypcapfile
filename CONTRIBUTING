@@ -1,0 +1,11 @@
+CONTRIBUTION GUIDELINES
+
+Here's a few simple requests I have for code contributions:
+
+* Please ensure all tests pass (pull requests are sent to
+[travis-ci](https://travis-ci.org/kisom/pypcapfile).
+* Please update any comments in modified functions, and update the READMEs. I
+will regenerate the Github page based on the changed README.
+* Add your name and info to the AUTHORs file (if you want).
+
+Thanks!
