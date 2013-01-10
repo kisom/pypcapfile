@@ -6,6 +6,11 @@ Here's a few simple requests I have for code contributions:
 [travis-ci](https://travis-ci.org/kisom/pypcapfile).
 * Please update any comments in modified functions, and update the READMEs. I
 will regenerate the Github page based on the changed README.
+* Please run the code through the `pep8` style checker and ensure all new
+code is compliant.
+* Please run the code through the `pylint` code checker; the code base strives
+for scores > 9.0/10.0; if there is a good reason for a lower score, please
+note that in the pull request.
 * Add your name and info to the AUTHORs file (if you want).
 
 Thanks!
