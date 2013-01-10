@@ -23,5 +23,7 @@ setup(name='pypcapfile',
                 'pcapfile.protocols.linklayer',
                 'pcapfile.protocols.network',
                 ],
-      package_data={'pcapfile.test': ['test/test_data']})
+      package_data={'pcapfile.test': ['test/test_data']},
+      data_files={'share/doc/pcapfile': ['README', 'AUTHORS', 'CONTRIBUTING']}
+      )
 
