@@ -1,4 +1,9 @@
-testpcap = """
+"""
+Test fixtures for the pypcapfile test suite.
+"""
+
+
+TESTPCAP = """
 UydceGQ0XHhjM1x4YjJceGExXHgwMlx4MDBceDA0XHgwMFx4MDBceDAwXHgwMFx4MDBceDAwXHgw
 MFx4MDBceDAwXHgwMFx4MDFceDAwXHgwMFx4MDFceDAwXHgwMFx4MDB4XHhiM1x4MWFQXHg5MD5c
 eDAwXHgwME5ceDAwXHgwMFx4MDBOXHgwMFx4MDBceDAwXHhjMD9ceDBlXHgxMVx4MWNceGMwXHgw

@@ -8,13 +8,14 @@ import pickle
 import tempfile
 import unittest
 
-import fixture
+import pcapfile.test.fixture as fixture
 from pcapfile import savefile
 
 
 def create_pcap():
+    """Create a capture file from the test fixtures."""
     tfile = tempfile.NamedTemporaryFile()
-    capture = pickle.loads(fixture.testpcap.decode('base64'))
+    capture = pickle.loads(fixture.TESTPCAP.decode('base64'))
     open(tfile.name, 'w').write(capture)
     return tfile
 
@@ -26,6 +27,7 @@ class TestCase(unittest.TestCase):
     capfile = None
 
     def init_capfile(self, layers=0):
+        """Initialise the capture file."""
         tfile = create_pcap()
         self.capfile = savefile.load_savefile(tfile, layers=layers)
         tfile.close()
@@ -50,7 +52,7 @@ class TestCase(unittest.TestCase):
 
     def test_network_load(self):
         """
-        Test that the code that loads network layer packets from the 
+        Test that the code that loads network layer packets from the
         top level works.
         """
         self.init_capfile(layers=2)
@@ -66,7 +68,7 @@ class TestCase(unittest.TestCase):
         self.init_capfile(layers=1)
         for packet in self.capfile.packets:
             for field in ['src', 'dst', 'type', 'payload']:
-                self.assertTrue(hasattr(packet.packet, field), 
+                self.assertTrue(hasattr(packet.packet, field),
                                 'invalid frame!')
 
     def test_packet_valid(self):
@@ -74,11 +76,11 @@ class TestCase(unittest.TestCase):
         Make sure raw packets load properly.
         """
         packet = self.capfile.packets[0].raw()
-        self.assertEqual(packet[14], '\x45', 'invalid packet') 
+        self.assertEqual(packet[14], '\x45', 'invalid packet')
 
         for packet in self.capfile.packets:
-            for field in ['capture_len', 'timestamp', 'timestamp_ms', 
-                    'packet', 'header', 'packet_len']:
+            for field in ['capture_len', 'timestamp', 'timestamp_ms',
+                          'packet', 'header', 'packet_len']:
                 self.assertTrue(hasattr(packet, field), 'invalid packet!')
 
     def test_header_valid(self):

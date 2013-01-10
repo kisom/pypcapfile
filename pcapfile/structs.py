@@ -11,14 +11,14 @@ class __pcap_header__(ctypes.Structure):
 C-struct representation of a savefile header. See __validate_header__
 for validation.
     """
-    _fields_ = [('magic', ctypes.c_uint),       # file magic number
-                ('major', ctypes.c_ushort),     # major version number
-                ('minor', ctypes.c_ushort),     # minor version number
-                ('tz_off', ctypes.c_uint),      # timezone offset
-                ('ts_acc', ctypes.c_uint),      # timestamp accuracy
-                ('snaplen', ctypes.c_uint),     # snapshot length
-                ('ll_type', ctypes.c_uint),     # link layer header type
-                ('byteorder', ctypes.c_char_p)] # byte order specifier
+    _fields_ = [('magic', ctypes.c_uint),        # file magic number
+                ('major', ctypes.c_ushort),      # major version number
+                ('minor', ctypes.c_ushort),      # minor version number
+                ('tz_off', ctypes.c_uint),       # timezone offset
+                ('ts_acc', ctypes.c_uint),       # timestamp accuracy
+                ('snaplen', ctypes.c_uint),      # snapshot length
+                ('ll_type', ctypes.c_uint),      # link layer header type
+                ('byteorder', ctypes.c_char_p)]  # byte order specifier
 
 
 class pcap_packet(ctypes.Structure):
@@ -37,15 +37,15 @@ class pcap_packet(ctypes.Structure):
 
     packet = None
 
-    def __init__(self, header, timestamp, timestamp_ms, capture_len, 
+    def __init__(self, header, timestamp, timestamp_ms, capture_len,
                  packet_len, packet):
+        super(pcap_packet, self).__init__()
         self.header = header
         self.timestamp = timestamp
         self.timestamp_ms = timestamp_ms
         self.capture_len = capture_len
         self.packet_len = packet_len
         self.packet = packet
-                
 
     def raw(self):
         """
@@ -61,6 +61,3 @@ class pcap_packet(ctypes.Structure):
                 return str(self.packet)
         else:
             return str(self.packet)
-
-
-

@@ -47,14 +47,13 @@ class pcap_savefile(object):
 
         assert self.valid, 'Invalid savefile.'
 
-
     def __validate__(self):
         assert __validate_header__(self.header),  "Invalid header."
         if not __validate_header__(self.header):
             return False
 
         # TODO: extended validation
-        valid_packet = lambda pkt: (pkt is not None or 
+        valid_packet = lambda pkt: (pkt is not None or
                                     pkt.issubclass(ctypes.Structure))
         if not 0 == len(self.packets):
             valid_packet = [valid_packet(pkt) for pkt in self.packets]
@@ -186,15 +185,14 @@ def _read_a_packet(file_h, hdrp, layers=0):
 
     if layers > 0:
         layers -= 1
-        raw_packet = linklayer.clookup(hdrp[0].ll_type)(raw_packet_data, 
-                                                    layers=layers)
+        raw_packet = linklayer.clookup(hdrp[0].ll_type)(raw_packet_data,
+                                                        layers=layers)
     else:
         raw_packet = binascii.hexlify(raw_packet_data)
 
     packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len,
-                             packet_len, raw_packet)
+                         packet_len, raw_packet)
     return packet
-
 
 
 def __endian_check__(hdrp):

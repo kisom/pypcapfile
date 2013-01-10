@@ -11,7 +11,7 @@ import pcapfile.protocols.linklayer.ethernet as ethernet
 
 
 __LL_TYPES__ = [('LINKTYPE_NULL', 0, 'null', None),
-                ('LINKTYPE_ETHERNET', 1, 'ethernet', 
+                ('LINKTYPE_ETHERNET', 1, 'ethernet',
                     ethernet.Ethernet),
                 ('LINKTYPE_TOKEN_RING', 6, 'token ring', None),
                 ('LINKTYPE_ARCNET', 7, 'ARCnet', None),
@@ -53,6 +53,7 @@ def slookup(ll_type):
     else:
         return res
 
+
 def clookup(ll_type):
     """
     Given an ll_type, retrieve the linklayer constructor to decode
@@ -64,19 +65,20 @@ def clookup(ll_type):
     else:
         return res
 
+
 def __load_linktype__(link_type):
     """
     Given a string for a given module, attempt to load it.
     """
-    fp, pathname, description = imp.find_module(link_type, sys.path) 
 
     try:
-        link_type_module = imp.load_module(feeder_name, fp, pathname, 
+        filep, pathname, description = imp.find_module(link_type, sys.path)
+        link_type_module = imp.load_module(link_type, filep, pathname,
                                            description)
-    except:
+    except ImportError:
         return None
     finally:
-        if fp:
-            fp.close()
+        if filep:
+            filep.close()
 
-    return link_type_module    
+    return link_type_module

@@ -15,6 +15,7 @@ TEST_PACKET = ['010203040506ffeeddccbbaa08004500003cc43800003806',
                '0306']
 TEST_PACKET = binascii.unhexlify(''.join(TEST_PACKET))
 
+
 class TestCase(unittest.TestCase):
     """
     Test case for the Ethernet frame parser.
@@ -31,14 +32,14 @@ class TestCase(unittest.TestCase):
         """
         Verify attributes of Ethernet instance.
         """
-        frame = ethernet.Ethernet(TEST_PACKET) 
+        frame = ethernet.Ethernet(TEST_PACKET)
         self.assertEqual(frame.src, 'ff:ee:dd:cc:bb:aa',
                          'invalid frame source address')
         self.assertEqual(frame.dst, '01:02:03:04:05:06',
                          'invalid frame destination address')
         self.assertEqual(frame.type, 0x0800, 'invalid frame type')
         self.assertTrue(hasattr(frame, 'load_network'),
-                         'missing load_network method')
+                        'missing load_network method')
         frame.load_network()
         self.assertTrue(hasattr(frame.payload, 'ttl'),
                         'load_network fails')
@@ -47,6 +48,6 @@ class TestCase(unittest.TestCase):
         """
         Verify the ethernet frames load.
         """
-        frame = ethernet.Ethernet(TEST_PACKET) 
+        frame = ethernet.Ethernet(TEST_PACKET)
         self.assertTrue(isinstance(frame, ethernet.Ethernet),
                         'invalid ethernet frame!')

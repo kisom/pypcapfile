@@ -50,7 +50,6 @@ class Ethernet(ctypes.Structure):
                 # if no type is found, do not touch the packet.
                 pass
 
-
     def __str__(self):
         frame = 'ethernet from %s to %s type %s'
         frame = frame % (self.src, self.dst, payload_type(self.type)[1])
@@ -78,14 +77,14 @@ def payload_type(ethertype):
     if ethertype == 0x0800:
         from pcapfile.protocols.network.ip import IP
         return (IP, 'IPv4')
-    elif ethertype == 0x0806:
-        from pcapfile.protocols.network.arp import ARP
-        return (ARP, 'ARP')
-    elif ethertype == 0x0835:
-        from pcapfile.protocols.network.rarp import RARP
-        return (RARP, 'RARP')
-    elif ethertype == 0x08DD:
-        from pcapfile.protocols.network.ipv6 import IPv6
-        return (IPv6, 'IPv6')
+#    elif ethertype == 0x0806:
+#        from pcapfile.protocols.network.arp import ARP
+#        return (ARP, 'ARP')
+#    elif ethertype == 0x0835:
+#        from pcapfile.protocols.network.rarp import RARP
+#        return (RARP, 'RARP')
+#    elif ethertype == 0x08DD:
+#        from pcapfile.protocols.network.ipv6 import IPv6
+#        return (IPv6, 'IPv6')
     else:
         return (None, 'unknown')
