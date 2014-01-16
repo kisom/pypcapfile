@@ -187,10 +187,6 @@ def _read_a_packet(file_h, hdrp, layers=0):
     (timestamp, timestamp_ms, capture_len, packet_len) = packet_header
     raw_packet_data = file_h.read(capture_len)
 
-    # if the capture file is not the same endianness as ours, we need to
-    # reverse the packet data
-    if not __endian_check__(hdrp):
-        raw_packet_data = raw_packet_data[::-1]
     assert len(raw_packet_data) == capture_len, 'Unexpected end of packet.'
 
     if layers > 0:
@@ -203,11 +199,3 @@ def _read_a_packet(file_h, hdrp, layers=0):
     packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len,
                          packet_len, raw_packet)
     return packet
-
-
-def __endian_check__(hdrp):
-    if hdrp[0].magic == 0xa1b2c3d4:
-        return True
-    elif hdrp[0].magic == 0xd4c3b2a1:
-        return False
-    assert False, 'failed endian check.'
