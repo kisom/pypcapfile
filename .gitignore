@@ -1,4 +1,5 @@
 #likely to be here as test fodder
+*.py[cod]
 *.pcap
 MANIFEST
 build
