@@ -48,7 +48,7 @@ class pcap_savefile(object):
         assert self.valid, 'Invalid savefile.'
 
     def __validate__(self):
-        assert __validate_header__(self.header),  "Invalid header."
+        assert __validate_header__(self.header), "Invalid header."
         if not __validate_header__(self.header):
             return False
 
@@ -79,13 +79,18 @@ def _load_savefile_header(file_h):
 Load and validate the header of a pcap file.
     """
     raw_savefile_header = file_h.read(24)
+
+    # in case the capture file is not the same endianness as ours, we have to
+    # use the correct byte order for the file header
     if raw_savefile_header[:4] == '\xa1\xb2\xc3\xd4':
         byte_order = 'big'
+        unpacked = struct.unpack('>IhhIIII', raw_savefile_header)
     elif raw_savefile_header[:4] == '\xd4\xc3\xb2\xa1':
         byte_order = 'little'
+        unpacked = struct.unpack('<IhhIIII', raw_savefile_header)
     else:
-        byte_order = None
-    unpacked = struct.unpack('=IhhIIII', raw_savefile_header)
+        raise Exception('Invalid pcap file.')
+
     (magic, major, minor, tz_off, ts_acc, snaplen, ll_type) = unpacked
     header = __pcap_header__(magic, major, minor, tz_off, ts_acc, snaplen,
                              ll_type, ctypes.c_char_p(byte_order))
@@ -106,13 +111,13 @@ def load_savefile(input_file, layers=0, verbose=False):
     old_verbose = VERBOSE
     VERBOSE = verbose
 
-    __TRACE__('[+] attempting to load %s', (input_file.name, ))
+    __TRACE__('[+] attempting to load %s', (input_file.name,))
 
     header = _load_savefile_header(input_file)
     if __validate_header__(header):
         __TRACE__('[+] found valid header')
         packets = _load_packets(input_file, header, layers)
-        __TRACE__('[+] loaded %d packets', (len(packets), ))
+        __TRACE__('[+] loaded %d packets', (len(packets),))
         sfile = pcap_savefile(header, packets)
         __TRACE__('[+] finished loading savefile.')
     else:
@@ -173,14 +178,15 @@ def _read_a_packet(file_h, hdrp, layers=0):
         return None
     assert len(raw_packet_header) == 16, 'Unexpected end of per-packet header.'
 
-    packet_header = struct.unpack('=IIII', raw_packet_header)
+    # in case the capture file is not the same endianness as ours, we have to
+    # use the correct byte order for the packet header
+    if hdrp[0].byteorder == 'big':
+        packet_header = struct.unpack('>IIII', raw_packet_header)
+    else:
+        packet_header = struct.unpack('<IIII', raw_packet_header)
     (timestamp, timestamp_ms, capture_len, packet_len) = packet_header
     raw_packet_data = file_h.read(capture_len)
 
-    # if the capture file is not the same endianness as ours, we need to
-    # reverse the packet data
-    if not __endian_check__(hdrp):
-        raw_packet_data = raw_packet_data[::-1]
     assert len(raw_packet_data) == capture_len, 'Unexpected end of packet.'
 
     if layers > 0:
@@ -193,11 +199,3 @@ def _read_a_packet(file_h, hdrp, layers=0):
     packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len,
                          packet_len, raw_packet)
     return packet
-
-
-def __endian_check__(hdrp):
-    if hdrp[0].magic == 0xa1b2c3d4:
-        return True
-    elif hdrp[0].magic == 0xd4c3b2a1:
-        return False
-    assert False, 'failed endian check.'
