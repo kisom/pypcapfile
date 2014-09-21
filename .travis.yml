@@ -2,5 +2,8 @@ language: python
 python:
   - "2.7"
   - "pypy"
-install: pip install .
+install: 
+  - pip install .
+  - pip install codecov
 script:  python -m pcapfile.test
+after_success: codecov
