@@ -5,5 +5,5 @@ python:
 install: 
   - pip install .
   - pip install codecov
-script:  python -m pcapfile.test
+script: coverage run -m pcapfile.test
 after_success: codecov
