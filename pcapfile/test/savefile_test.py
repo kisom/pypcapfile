@@ -59,7 +59,8 @@ class TestCase(unittest.TestCase):
         for packet in self.capfile.packets:
             for field in ['src', 'dst', 'v', 'hl', 'tos', 'ttl']:
                 ipkt = packet.packet.payload
-                self.assertTrue(hasattr(ipkt, field), 'invalid packet!')
+                self.assertTrue(hasattr(ipkt, field),
+                                'invalid packet: missing ' + field)
 
     def test_frame_load(self):
         """

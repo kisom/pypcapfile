@@ -6,47 +6,28 @@ import binascii
 import ctypes
 import struct
 
-
-class IP(ctypes.Structure):
+class IP(ctypes.BigEndianStructure):
     """
     Represents an IP packet.
     """
 
-    _fields_ = [('v', ctypes.c_ushort),         # version
-                ('hl', ctypes.c_ushort),        # internet header length
-                ('tos', ctypes.c_ubyte),        # type of service
-                ('len', ctypes.c_ushort),       # total length
-                ('id', ctypes.c_ushort),        # IPID
-                ('flags', ctypes.c_ushort, 3),  # flags
-                ('off', ctypes.c_ushort, 13),   # fragmentation offset
-                ('ttl', ctypes.c_ubyte),        # TTL
-                ('p', ctypes.c_ubyte),          # protocol
-                ('sum', ctypes.c_ushort),       # checksum
-                ('src', ctypes.c_char_p),       # source address
-                ('dst', ctypes.c_char_p),       # destination address
-                ('opt', ctypes.c_char_p),       # IP options
-                ('pad', ctypes.c_char_p),       # padding bytes
-                ('payload', ctypes.c_char_p)]   # packet payload
+    _fields_ = [('v', ctypes.c_uint8, 4),       # version
+                ('hl', ctypes.c_uint8, 4),      # internet header length
+                ('tos', ctypes.c_uint8),        # type of service
+                ('len', ctypes.c_uint16),       # total length
+                ('id', ctypes.c_uint16),        # IPID
+                ('flags', ctypes.c_uint16, 3),  # flags
+                ('off', ctypes.c_uint16, 13),   # fragmentation offset
+                ('ttl', ctypes.c_uint8),        # TTL
+                ('p', ctypes.c_uint8),          # protocol
+                ('sum', ctypes.c_uint16),       # checksum
+                ('src', ctypes.c_uint32),       # source address
+                ('dst', ctypes.c_uint32)]       # destination address
 
     def __init__(self, packet, layers=0):
-        # parse the required header first, deal with options later
-        magic = struct.unpack('B', packet[0])[0]
-        assert ((magic & 0b1100) == 4
-                and (magic & 0b0111) > 4), 'not an IPv4 packet.'
-
-        fields = struct.unpack('!BBHHHBBHII', packet[:20])
-        self.v = fields[0] & 0b1100
-        self.hl = fields[0] & 0b0111
-        self.tos = fields[1]
-        self.len = fields[2]
-        self.id = fields[3]
-        self.flags = fields[4] >> 13
-        self.off = fields[4] & 0x1fff
-        self.ttl = fields[5]
-        self.p = fields[6]
-        self.sum = fields[7]
-        self.src = ctypes.c_char_p(parse_ipv4(fields[8]))
-        self.dst = ctypes.c_char_p(parse_ipv4(fields[9]))
+        ctypes.BigEndianStructure.__init__(self)
+        assert self.v == 4 and self.hl > 4, 'not an IPv4 packet'
+        self.payload = ctypes.c_char_p(binascii.hexlify(packet[0x14:]))
 
         if self.hl > 0x14:
             start = 0x15
@@ -79,11 +60,11 @@ def strip_ip(packet):
     """
     Remove the IP packet layer, yielding the transport layer.
     """
-    if not type(packet) == IP:
+    if not isinstance(packet, IP):
         packet = IP(packet)
     payload = packet.payload
 
-    if type(payload) == '':
+    if isinstance(payload, str):
         payload = binascii.unhexlify(payload)
     return payload
 

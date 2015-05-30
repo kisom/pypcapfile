@@ -4,6 +4,7 @@ This is the test case for the savefile.
 """
 
 import binascii
+import ctypes
 import unittest
 
 from pcapfile.protocols.linklayer import ethernet
@@ -32,7 +33,9 @@ class TestCase(unittest.TestCase):
         """
         Verify attributes of Ethernet instance.
         """
-        frame = ethernet.Ethernet(TEST_PACKET)
+        frame = ctypes.cast(TEST_PACKET,
+                            ctypes.POINTER(ethernet.Ethernet)).contents
+        frame.__init__(TEST_PACKET)
         self.assertEqual(frame.src, 'ff:ee:dd:cc:bb:aa',
                          'invalid frame source address')
         self.assertEqual(frame.dst, '01:02:03:04:05:06',
