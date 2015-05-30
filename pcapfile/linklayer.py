@@ -8,6 +8,7 @@ import imp
 import sys
 
 import pcapfile.protocols.linklayer.ethernet as ethernet
+import pcapfile.protocols.network.ip2 as ip2
 
 
 __LL_TYPES__ = [('LINKTYPE_NULL', 0, 'null', None),
@@ -15,7 +16,8 @@ __LL_TYPES__ = [('LINKTYPE_NULL', 0, 'null', None),
                     ethernet.Ethernet),
                 ('LINKTYPE_TOKEN_RING', 6, 'token ring', None),
                 ('LINKTYPE_ARCNET', 7, 'ARCnet', None),
-                ('LINKTYPE_SLIP', 8, 'SLIP', None)]
+                ('LINKTYPE_SLIP', 8, 'SLIP', None),
+                ('LINKTYPE_RAW', 101, 'RAW', ip2.IP)]
 
 
 def __get_ll_type__(ll_type):

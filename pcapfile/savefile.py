@@ -100,6 +100,22 @@ Load and validate the header of a pcap file.
         return header
 
 
+def iterate_savefile(input_file, layers=0):
+    """
+    Return a generator that iterates over the savefile, returning a
+    single packet per iteration.
+    """
+    header = _load_savefile_header(input_file)
+    if __validate_header__(header):
+        hdrp = ctypes.pointer(header)
+        while True:
+            pkt = _read_a_packet(input_file, hdrp, layers)
+            if pkt:
+                yield pkt
+            else:
+                break
+
+
 def load_savefile(input_file, layers=0, verbose=False):
     """
     Parse a savefile as a pcap_savefile instance. Returns the savefile
@@ -191,8 +207,8 @@ def _read_a_packet(file_h, hdrp, layers=0):
 
     if layers > 0:
         layers -= 1
-        raw_packet = linklayer.clookup(hdrp[0].ll_type)(raw_packet_data,
-                                                        layers=layers)
+        raw_packet = ctypes.cast(raw_packet_data,
+                                 ctypes.POINTER(linklayer.clookup(hdrp[0].ll_type))).contents
     else:
         raw_packet = binascii.hexlify(raw_packet_data)
 
