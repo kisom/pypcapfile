@@ -9,22 +9,21 @@ import struct
 import pcapfile.structs
 
 
-class Ethernet(ctypes.Structure):
+class Ethernet(ctypes.BigEndianStructure):
     """
     Represents an Ethernet frame.
     """
 
-    _fields_ = [('dst', ctypes.c_char_p),
-                ('src', ctypes.c_char_p),
-                ('type', ctypes.c_ushort)]
+    _fields_ = [('dst_raw', (ctypes.c_uint8 * 6)),
+                ('src_raw', (ctypes.c_uint8 * 6)),
+                ('type', ctypes.c_uint16)]
 
     payload = None
 
     def __init__(self, packet, layers=0):
-        (dst, src, self.type) = struct.unpack('!6s6sH', packet[:14])
-
-        self.dst = ':'.join(['%02x' % (ord(octet), ) for octet in dst])
-        self.src = ':'.join(['%02x' % (ord(octet), ) for octet in src])
+        ctypes.BigEndianStructure.__init__(self)
+        self.dst = ':'.join(['%02x' % octet for octet in self.dst_raw])
+        self.src = ':'.join(['%02x' % octet for octet in self.src_raw])
 
         payload = binascii.hexlify(packet[14:])
         self.payload = payload
@@ -45,7 +44,9 @@ class Ethernet(ctypes.Structure):
             if ctor:
                 ctor = ctor
                 payload = binascii.unhexlify(self.payload)
-                self.payload = ctor(payload, layers - 1)
+                self.payload = ctypes.cast(payload,
+                                           ctypes.POINTER(ctor)).contents
+                self.payload.__init__(payload, layers - 1)
             else:
                 # if no type is found, do not touch the packet.
                 pass
@@ -60,11 +61,11 @@ def strip_ethernet(packet):
     """
     Strip the Ethernet frame from a packet.
     """
-    if not type(packet) == Ethernet:
+    if not isinstance(packet, Ethernet):
         packet = Ethernet(packet)
     payload = packet.payload
 
-    if type(payload) == str:
+    if isinstance(payload, str):
         payload = binascii.unhexlify(payload)
     return payload
 
