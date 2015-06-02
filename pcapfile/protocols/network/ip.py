@@ -6,6 +6,7 @@ import binascii
 import ctypes
 import struct
 
+
 class IP(ctypes.BigEndianStructure):
     """
     Represents an IP packet.
