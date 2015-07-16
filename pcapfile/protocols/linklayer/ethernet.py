@@ -23,8 +23,16 @@ class Ethernet(ctypes.Structure):
     def __init__(self, packet, layers=0):
         (dst, src, self.type) = struct.unpack('!6s6sH', packet[:14])
 
-        self.dst = ':'.join(['%02x' % (ord(octet), ) for octet in dst])
-        self.src = ':'.join(['%02x' % (ord(octet), ) for octet in src])
+        try:# python3
+            self.dst = b':'.join([struct.pack('bb', ord('{:x}'.format((octet >> 4) & 0xf)), ord('{:x}'.format((octet >> 0) & 0xf))) for octet in dst])
+        except TypeError: # python2
+            self.dst = ':'.join(['%02x' % (ord(octet), ) for octet in dst])
+        
+        
+        try:# python3
+            self.src = b':'.join([struct.pack('bb', ord('{:x}'.format((octet >> 4) & 0xf)), ord('{:x}'.format((octet >> 0) & 0xf))) for octet in src])
+        except TypeError: # python2
+            self.src = ':'.join(['%02x' % (ord(octet), ) for octet in src])
 
         payload = binascii.hexlify(packet[14:])
         self.payload = payload

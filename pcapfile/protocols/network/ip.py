@@ -30,7 +30,10 @@ class IP(ctypes.Structure):
 
     def __init__(self, packet, layers=0):
         # parse the required header first, deal with options later
-        magic = struct.unpack('B', packet[0])[0]
+        try: # python2
+            magic = struct.unpack('B', packet[0])[0]
+        except TypeError: # python3
+            magic = packet[0]
         assert ((magic & 0b1100) == 4
                 and (magic & 0b0111) > 4), 'not an IPv4 packet.'
 
@@ -53,10 +56,10 @@ class IP(ctypes.Structure):
             end = self.len - 0x14
             self.opt = binascii.hexlify(packet[start:end])
         else:
-            self.opt = '\x00'
+            self.opt = b'\x00'
             self.payload = ctypes.c_char_p(binascii.hexlify(packet[0x14:]))
 
-        self.pad = '\x00'
+        self.pad = b'\x00'
 
     def __str__(self):
         packet = 'ipv4 packet from %s to %s carrying %d bytes'
@@ -71,7 +74,10 @@ def parse_ipv4(address):
     """
     raw = struct.pack('I', address)
     octets = struct.unpack('BBBB', raw)[::-1]
-    ipv4 = '.'.join(['%d' % (b,) for b in octets])
+    try:# python3
+        ipv4 = b'.'.join([struct.pack('bb', ord('{:x}'.format((b >> 4) & 0xf)), ord('{:x}'.format((b >> 0) & 0xf))) for b in octets])
+    except TypeError: # python2
+        ipv4 = '.'.join(['%d' % (b,) for b in octets])
     return ipv4
 
 

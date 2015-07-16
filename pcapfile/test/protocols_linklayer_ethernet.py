@@ -9,11 +9,11 @@ import unittest
 from pcapfile.protocols.linklayer import ethernet
 
 # a sample ethernet frame carrying an IPv4 SYN request
-TEST_PACKET = ['010203040506ffeeddccbbaa08004500003cc43800003806',
-               '2898adc22552c0a8022f0050f9dc06511a336489a374a012',
-               '37641b070000020405960402080a2195430027e3b0900103',
-               '0306']
-TEST_PACKET = binascii.unhexlify(''.join(TEST_PACKET))
+TEST_PACKET = [b'010203040506ffeeddccbbaa08004500003cc43800003806',
+               b'2898adc22552c0a8022f0050f9dc06511a336489a374a012',
+               b'37641b070000020405960402080a2195430027e3b0900103',
+               b'0306']
+TEST_PACKET = binascii.unhexlify(b''.join(TEST_PACKET))
 
 
 class TestCase(unittest.TestCase):
@@ -26,16 +26,16 @@ class TestCase(unittest.TestCase):
         """
         Print a start message when loading the test suite.
         """
-        print '[+] testing ethernet frame decoding...'
+        print('[+] testing ethernet frame decoding...')
 
     def test_frame_field(self):
         """
         Verify attributes of Ethernet instance.
         """
         frame = ethernet.Ethernet(TEST_PACKET)
-        self.assertEqual(frame.src, 'ff:ee:dd:cc:bb:aa',
+        self.assertEqual(frame.src, b'ff:ee:dd:cc:bb:aa',
                          'invalid frame source address')
-        self.assertEqual(frame.dst, '01:02:03:04:05:06',
+        self.assertEqual(frame.dst, b'01:02:03:04:05:06',
                          'invalid frame destination address')
         self.assertEqual(frame.type, 0x0800, 'invalid frame type')
         self.assertTrue(hasattr(frame, 'load_network'),
