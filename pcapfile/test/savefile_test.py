@@ -19,7 +19,7 @@ def create_pcap():
         Y = fixture.TESTPCAP3
         X = base64.b64decode(Y)
         capture = pickle.loads(X)
-    except: # python2
+    except ValueError: # python2 unsupported pickle protocol: 3
         Y = fixture.TESTPCAP2
         X = Y.decode('base64')
         capture = pickle.loads(X)
