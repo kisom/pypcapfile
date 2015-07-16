@@ -64,17 +64,10 @@ class pcap_savefile(object):
         return True
 
     def __repr__(self):
-#         string = '%s-endian capture file version %d.%d\n'
-#         string += 'snapshot length: %d\n'
-#         string += 'linklayer type: %s\nnumber of packets: %d\n'
-#         string = string % (self.header.byteorder, self.header.major,
-#                            self.header.minor, self.header.snaplen,
-#                            linklayer.lookup(self.header.ll_type),
-#                            len(self.packets))
-        string = '{:s}-endian capture file version {:d}.{:d}\n'
-        string += 'snapshot length: {:d}\n'
-        string += 'linklayer type: {:s}\nnumber of packets: {:d}\n'
-        string = string.format(self.header.byteorder, self.header.major,
+        string = '%s-endian capture file version %d.%d\n'
+        string += 'snapshot length: %d\n'
+        string += 'linklayer type: %s\nnumber of packets: %d\n'
+        string = string % (self.header.byteorder, self.header.major,
                            self.header.minor, self.header.snaplen,
                            linklayer.lookup(self.header.ll_type),
                            len(self.packets))

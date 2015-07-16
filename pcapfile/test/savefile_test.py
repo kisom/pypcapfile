@@ -12,7 +12,6 @@ import base64
 import pcapfile.test.fixture as fixture
 from pcapfile import savefile
 
-
 def create_pcap():
     """Create a capture file from the test fixtures."""
     tfile = tempfile.NamedTemporaryFile()
