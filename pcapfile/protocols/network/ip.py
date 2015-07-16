@@ -74,10 +74,7 @@ def parse_ipv4(address):
     """
     raw = struct.pack('I', address)
     octets = struct.unpack('BBBB', raw)[::-1]
-    try:# python3
-        ipv4 = b'.'.join([struct.pack('bb', ord('{:x}'.format((b >> 4) & 0xf)), ord('{:x}'.format((b >> 0) & 0xf))) for b in octets])
-    except TypeError: # python2
-        ipv4 = '.'.join(['%d' % (b,) for b in octets])
+    ipv4 = b'.'.join([('%d'% b).encode('ascii') for b in bytearray(octets)])
     return ipv4
 
 
