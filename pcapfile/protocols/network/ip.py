@@ -30,12 +30,9 @@ class IP(ctypes.Structure):
 
     def __init__(self, packet, layers=0):
         # parse the required header first, deal with options later
-        try: # python2
-            magic = struct.unpack('B', packet[0])[0]
-        except TypeError: # python3
-            magic = packet[0]
-        assert ((magic & 0b1100) == 4
-                and (magic & 0b0111) > 4), 'not an IPv4 packet.'
+        magic = int(bytearray(packet)[0])
+        assert ((magic & 0b1100) == 4 and
+                (magic & 0b0111) > 4), 'not an IPv4 packet.'
 
         fields = struct.unpack('!BBHHHBBHII', packet[:20])
         self.v = fields[0] & 0b1100
@@ -74,7 +71,7 @@ def parse_ipv4(address):
     """
     raw = struct.pack('I', address)
     octets = struct.unpack('BBBB', raw)[::-1]
-    ipv4 = b'.'.join([('%d'% b).encode('ascii') for b in bytearray(octets)])
+    ipv4 = b'.'.join([('%d' % o).encode('ascii') for o in bytearray(octets)])
     return ipv4
 
 

@@ -81,9 +81,9 @@ Load and validate the header of a pcap file.
     try:
         raw_savefile_header = file_h.read(24)
     except UnicodeDecodeError:
-        print("\nMake sure the input file is opened in (r)ead (b)inary, 'rb'\n")
+        print("\nMake sure the input file is opened in read binary, 'rb'\n")
         raise
-    
+
     # in case the capture file is not the same endianness as ours, we have to
     # use the correct byte order for the file header
     if raw_savefile_header[:4] == b'\xa1\xb2\xc3\xd4':
