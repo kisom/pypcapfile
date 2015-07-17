@@ -7,16 +7,23 @@ import os
 import pickle
 import tempfile
 import unittest
+import base64
+import sys
 
 import pcapfile.test.fixture as fixture
 from pcapfile import savefile
 
 
 def create_pcap():
-    """Create a capture file from the test fixtures."""
+    """
+    Create a capture file from the test fixtures.
+    """
     tfile = tempfile.NamedTemporaryFile()
-    capture = pickle.loads(fixture.TESTPCAP.decode('base64'))
-    open(tfile.name, 'w').write(capture)
+    if sys.version_info[0] >= 3:  # python3
+        capture = pickle.loads(base64.b64decode(fixture.TESTPCAP3))
+    else:  # python2 unsupported pickle protocol: 3
+        capture = pickle.loads(fixture.TESTPCAP2.decode('base64'))
+    open(tfile.name, 'wb').write(capture)
     return tfile
 
 
@@ -39,7 +46,7 @@ class TestCase(unittest.TestCase):
         """
         Print an intro to identify this test suite when running multiple tests.
         """
-        print '[+] loading basic tests'
+        print('[+] loading basic tests')
 
     def setUp(self):
         """
@@ -76,7 +83,8 @@ class TestCase(unittest.TestCase):
         Make sure raw packets load properly.
         """
         packet = self.capfile.packets[0].raw()
-        self.assertEqual(packet[14], '\x45', 'invalid packet')
+
+        self.assertEqual(int(bytearray(packet)[14]), 69, 'invalid packet')
 
         for packet in self.capfile.packets:
             for field in ['capture_len', 'timestamp', 'timestamp_ms',

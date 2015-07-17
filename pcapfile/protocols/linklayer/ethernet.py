@@ -6,8 +6,6 @@ import binascii
 import ctypes
 import struct
 
-import pcapfile.structs
-
 
 class Ethernet(ctypes.Structure):
     """
@@ -23,8 +21,10 @@ class Ethernet(ctypes.Structure):
     def __init__(self, packet, layers=0):
         (dst, src, self.type) = struct.unpack('!6s6sH', packet[:14])
 
-        self.dst = ':'.join(['%02x' % (ord(octet), ) for octet in dst])
-        self.src = ':'.join(['%02x' % (ord(octet), ) for octet in src])
+        dst = bytearray(dst)
+        src = bytearray(src)
+        self.dst = b':'.join([('%02x' % o).encode('ascii') for o in dst])
+        self.src = b':'.join([('%02x' % o).encode('ascii') for o in src])
 
         payload = binascii.hexlify(packet[14:])
         self.payload = payload

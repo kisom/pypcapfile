@@ -29,7 +29,7 @@ class TestCase(unittest.TestCase):
         """
         Print an intro to identify this test suite when running multiple tests.
         """
-        print '[+] loading toplevel linklayer utility tests'
+        print('[+] loading toplevel linklayer utility tests')
 
     def test_constructor_lookup(self):
         """
