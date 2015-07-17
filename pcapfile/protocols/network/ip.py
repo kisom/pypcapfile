@@ -30,7 +30,7 @@ class IP(ctypes.Structure):
 
     def __init__(self, packet, layers=0):
         # parse the required header first, deal with options later
-        magic = struct.unpack('!b',packet[0])[0]
+        magic = struct.unpack('!B',packet[0:1])[0]
         assert ((magic & 0b1100) == 4 and
                 (magic & 0b0111) > 4), 'not an IPv4 packet.'
 
