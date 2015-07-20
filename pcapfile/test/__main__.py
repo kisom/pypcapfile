@@ -6,9 +6,9 @@ This is the front end to the pcapfile test SUITE.
 import unittest
 
 
-from linklayer_test import TestCase as LinklayerTest
-from savefile_test import TestCase as SavefileTest
-from protocols_linklayer_ethernet import TestCase as EthernetTest
+from pcapfile.test.linklayer_test import TestCase as LinklayerTest
+from pcapfile.test.savefile_test import TestCase as SavefileTest
+from pcapfile.test.protocols_linklayer_ethernet import TestCase as EthernetTest
 
 if __name__ == '__main__':
     TEST_CLASSES = [SavefileTest, LinklayerTest, EthernetTest]
