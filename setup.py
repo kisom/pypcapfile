@@ -11,7 +11,7 @@ setup(name='pypcapfile',
       version='0.9.0',
       description=('Pure Python package for reading and parsing libpcap '
                        'savefiles.'),
-      long_description=read('README'),
+      long_description=read('README.rst'),
       author='Kyle Isom',
       author_email='coder@kyleisom.net',
       license='ISC',
@@ -25,6 +25,6 @@ setup(name='pypcapfile',
                 ],
       package_data={'pcapfile.test': ['test/test_data']},
       data_files=[('share/doc/pcapfile',
-                   ['README', 'AUTHORS', 'CONTRIBUTING'])]
+                   ['README.rst', 'AUTHORS', 'CONTRIBUTING'])]
       )
 
