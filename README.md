@@ -144,10 +144,8 @@ See also
 [documentation on PyPI](http://packages.python.org/pypcapfile/)
 * The [libpcap homepage](http://www.tcpdump.org)
 
+
 Contributors
 ------------
-pycapfile was written by [Kyle Isom](https://github.com/kisom/).
 
-[Joshua Chia](https://github.com/jchia/) provided a patch to use the standard
-Python file objects instead of a path to the file; this allows transparent
-handling of certain types of compressed files.
+A list of the project's contributors may be found in the AUTHORS file.
