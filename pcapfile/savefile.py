@@ -16,6 +16,9 @@ from pcapfile.structs import __pcap_header__, pcap_packet
 
 VERBOSE = False
 
+_MAGIC_NUMBER = 0xa1b2c3d4
+_MAGIC_NUMBER_NS = 0xa1b23c4d
+
 
 def __TRACE__(msg, args=None):
     if VERBOSE:
@@ -65,13 +68,15 @@ class pcap_savefile(object):
 
     def __repr__(self):
         string = '%s-endian capture file version %d.%d\n'
+        string += '%ssecond time resolution\n'
         string += 'snapshot length: %d\n'
         string += 'linklayer type: %s\nnumber of packets: %d\n'
-        string = string % (self.header.byteorder, self.header.major,
-                           self.header.minor, self.header.snaplen,
-                           linklayer.lookup(self.header.ll_type),
-                           len(self.packets))
-        return string
+        return string % (self.header.byteorder, self.header.major,
+                         self.header.minor,
+                         "nano" if self.header.ns_resolution else "micro",
+                         self.header.snaplen,
+                         linklayer.lookup(self.header.ll_type),
+                         len(self.packets))
 
 
 def _load_savefile_header(file_h):
@@ -86,10 +91,12 @@ def _load_savefile_header(file_h):
 
     # in case the capture file is not the same endianness as ours, we have to
     # use the correct byte order for the file header
-    if raw_savefile_header[:4] == b'\xa1\xb2\xc3\xd4':
+    if raw_savefile_header[:4] in [struct.pack(">I", _MAGIC_NUMBER),
+                                   struct.pack(">I", _MAGIC_NUMBER_NS)]:
         byte_order = b'big'
         unpacked = struct.unpack('>IhhIIII', raw_savefile_header)
-    elif raw_savefile_header[:4] == b'\xd4\xc3\xb2\xa1':
+    elif raw_savefile_header[:4] in [struct.pack("<I", _MAGIC_NUMBER),
+                                     struct.pack("<I", _MAGIC_NUMBER_NS)]:
         byte_order = b'little'
         unpacked = struct.unpack('<IhhIIII', raw_savefile_header)
     else:
@@ -97,7 +104,8 @@ def _load_savefile_header(file_h):
 
     (magic, major, minor, tz_off, ts_acc, snaplen, ll_type) = unpacked
     header = __pcap_header__(magic, major, minor, tz_off, ts_acc, snaplen,
-                             ll_type, ctypes.c_char_p(byte_order))
+                             ll_type, ctypes.c_char_p(byte_order),
+                             magic == _MAGIC_NUMBER_NS)
     if not __validate_header__(header):
         raise Exception('invalid savefile header!')
     else:
@@ -136,9 +144,8 @@ def __validate_header__(header):
     if not type(header) == __pcap_header__:
         return False
 
-    if not header.magic == 0xa1b2c3d4:
-        if not header.magic == 0xd4c3b2a1:
-            return False
+    if header.magic not in [_MAGIC_NUMBER, _MAGIC_NUMBER_NS]:
+        return False
 
     assert header.byteorder in [b'little', b'big'], 'Invalid byte order.'
 
