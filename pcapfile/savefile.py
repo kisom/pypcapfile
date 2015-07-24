@@ -76,7 +76,7 @@ class pcap_savefile(object):
 
 def _load_savefile_header(file_h):
     """
-Load and validate the header of a pcap file.
+    Load and validate the header of a pcap file.
     """
     try:
         raw_savefile_header = file_h.read(24)
@@ -178,10 +178,7 @@ def _read_a_packet(file_h, hdrp, layers=0):
     per-packet header.
     """
     raw_packet_header = file_h.read(16)
-    if raw_packet_header == '':
-        return None
-    #assert len(raw_packet_header) == 16, 'Unexpected end of per-packet header.'
-    if len(raw_packet_header) != 16:
+    if not raw_packet_header or len(raw_packet_header) != 16:
         return None
 
     # in case the capture file is not the same endianness as ours, we have to
@@ -193,8 +190,7 @@ def _read_a_packet(file_h, hdrp, layers=0):
     (timestamp, timestamp_ms, capture_len, packet_len) = packet_header
     raw_packet_data = file_h.read(capture_len)
 
-    #assert len(raw_packet_data) == capture_len, 'Unexpected end of packet.'
-    if len(raw_packet_data) != capture_len or len(raw_packet_data) == 0:
+    if not raw_packet_data or len(raw_packet_data) != capture_len:
         return None
 
     if layers > 0:

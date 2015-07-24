@@ -8,8 +8,8 @@ import ctypes
 
 class __pcap_header__(ctypes.Structure):
     """
-C-struct representation of a savefile header. See __validate_header__
-for validation.
+    C-struct representation of a savefile header. See __validate_header__
+    for validation.
     """
     _fields_ = [('magic', ctypes.c_uint),        # file magic number
                 ('major', ctypes.c_ushort),      # major version number
