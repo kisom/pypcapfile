@@ -47,6 +47,7 @@ The core functionality is implemented in ``pcapfile.savefile``:
     [+] finished loading savefile.
     >>> print capfile
     little-endian capture file version 2.4
+    microsecond time resolution
     snapshot length: 65535
     linklayer type: LINKTYPE_ETHERNET
     number of packets: 11
