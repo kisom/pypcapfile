@@ -39,7 +39,7 @@ The core functionality is implemented in ``pcapfile.savefile``:
 .. code:: python
 
     >>> from pcapfile import savefile
-    >>> testcap = open('test.pcap')
+    >>> testcap = open('test.pcap', 'rb')
     >>> capfile = savefile.load_savefile(testcap, verbose=True)
     [+] attempting to load test.pcap
     [+] found valid header
@@ -81,7 +81,7 @@ Automatically decoding layers
     >>> from pcapfile.protocols.linklayer import ethernet
     >>> from pcapfile.protocols.network import ip
     >>> import binascii
-    >>> testcap = open('samples/test.pcap')
+    >>> testcap = open('samples/test.pcap', 'rb')
     >>> capfile = savefile.load_savefile(testcap, verbose=True)
     [+] attempting to load samples/test.pcap
     [+] found valid header
@@ -99,7 +99,7 @@ and this example:
 .. code:: python
 
     >>> from pcapfile import savefile
-    >>> testcap = open('samples/test.pcap')
+    >>> testcap = open('samples/test.pcap', 'rb')
     >>> capfile = savefile.load_savefile(testcap, layers=1, verbose=True)
     [+] attempting to load samples/test.pcap
     [+] found valid header
@@ -115,7 +115,7 @@ and lastly:
 .. code:: python
 
     >>> from pcapfile import savefile
-    >>> testcap = open('samples/test.pcap')
+    >>> testcap = open('samples/test.pcap', 'rb')
     >>> capfile = savefile.load_savefile(testcap, layers=2, verbose=True)
     >>> print capfile.packets[0].packet.payload
     ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
