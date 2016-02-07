@@ -1,3 +1,7 @@
+"""
+UDP transport definition
+"""
+
 import binascii
 import ctypes
 import struct
