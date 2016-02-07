@@ -7,3 +7,5 @@
         - added support for nanosecond time resolution
 - Douglas Kastle (https://github.com/douglaskastle)
         - Added initial python3 support
+- Joss Gray (https://github.com/jossgray)
+		- UDP transport support
