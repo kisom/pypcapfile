@@ -25,8 +25,7 @@ class IP(ctypes.Structure):
                 ('src', ctypes.c_char_p),       # source address
                 ('dst', ctypes.c_char_p),       # destination address
                 ('opt', ctypes.c_char_p),       # IP options
-                ('pad', ctypes.c_char_p),       # padding bytes
-                ('payload', ctypes.c_char_p)]   # packet payload
+                ('pad', ctypes.c_char_p)]       # padding bytes
 
     def __init__(self, packet, layers=0):
         # parse the required header first, deal with options later
@@ -54,9 +53,22 @@ class IP(ctypes.Structure):
             self.opt = binascii.hexlify(packet[start:end])
         else:
             self.opt = b'\x00'
-            self.payload = ctypes.c_char_p(binascii.hexlify(packet[0x14:]))
+            self.payload = binascii.hexlify(packet[0x14:])
 
         self.pad = b'\x00'
+
+        if layers:
+            self.load_transport(layers)
+
+    def load_transport(self, layers=1):
+        if layers:
+            ctor = payload_type(self.p)[0]
+            if ctor:
+                ctor = ctor
+                payload = binascii.unhexlify(self.payload)
+                self.payload = ctor(payload, layers - 1)
+            else:
+                pass
 
     def __str__(self):
         packet = 'ipv4 packet from %s to %s carrying %d bytes'
@@ -90,3 +102,10 @@ def strip_ip(packet):
 
 def __call__(packet):
     return IP(packet)
+
+def payload_type(protocol):
+    if protocol == 0x11:
+        from pcapfile.protocols.transport.udp import UDP
+        return (UDP, 'UDP')
+    else:
+        return (None, 'unknown')
