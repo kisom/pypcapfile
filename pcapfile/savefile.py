@@ -55,14 +55,16 @@ class pcap_savefile(object):
         if not __validate_header__(self.header):
             return False
 
-        # TODO: extended validation
-        valid_packet = lambda pkt: (pkt is not None or
-                                    pkt.issubclass(ctypes.Structure))
-        if not 0 == len(self.packets):
-            valid_packet = [valid_packet(pkt) for pkt in self.packets]
-            assert False not in valid_packet, 'Invalid packets in savefile.'
-            if False in valid_packet:
-                return False
+        # Validate the packets unless they are to be loaded lazily.
+        if isinstance(self.packets, list):
+            # TODO: extended validation
+            valid_packet = lambda pkt: (pkt is not None or
+                                        pkt.issubclass(ctypes.Structure))
+            if not 0 == len(self.packets):
+                valid_packet = [valid_packet(pkt) for pkt in self.packets]
+                assert False not in valid_packet, 'Invalid packets in savefile.'
+                if False in valid_packet:
+                    return False
 
         return True
 
@@ -112,7 +114,7 @@ def _load_savefile_header(file_h):
         return header
 
 
-def load_savefile(input_file, layers=0, verbose=False):
+def load_savefile(input_file, layers=0, verbose=False, lazy=False):
     """
     Parse a savefile as a pcap_savefile instance. Returns the savefile
     on success and None on failure. Verbose mode prints additional information
@@ -128,8 +130,12 @@ def load_savefile(input_file, layers=0, verbose=False):
     header = _load_savefile_header(input_file)
     if __validate_header__(header):
         __TRACE__('[+] found valid header')
-        packets = _load_packets(input_file, header, layers)
-        __TRACE__('[+] loaded {:d} packets', (len(packets),))
+        if lazy:
+            packets = _generate_packets(input_file, header, layers)
+            __TRACE__('[+] created packet generator')
+        else:
+            packets = _load_packets(input_file, header, layers)
+            __TRACE__('[+] loaded {:d} packets', (len(packets),))
         sfile = pcap_savefile(header, packets)
         __TRACE__('[+] finished loading savefile.')
     else:
@@ -176,6 +182,21 @@ def _load_packets(file_h, header, layers=0):
             break
 
     return pkts
+
+
+def _generate_packets(file_h, header, layers=0):
+    """
+    Read packets one by one from the capture file. Expects the file
+    handle to point to the location immediately after the header (24
+    bytes).
+    """
+    hdrp = ctypes.pointer(header)
+    while True:
+        pkt = _read_a_packet(file_h, hdrp, layers)
+        if pkt:
+            yield pkt
+        else:
+            break
 
 
 def _read_a_packet(file_h, hdrp, layers=0):
