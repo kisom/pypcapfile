@@ -8,4 +8,6 @@
 - Douglas Kastle (https://github.com/douglaskastle)
         - Added initial python3 support
 - Joss Gray (https://github.com/jossgray)
-		- UDP transport support
+        - UDP transport support
+- Tommy Olofsson (https://github.com/tommyolofsson)
+        - added support for large captures
