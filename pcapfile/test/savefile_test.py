@@ -106,3 +106,31 @@ class TestCase(unittest.TestCase):
         self.assertTrue(self.capfile.valid, 'invalid capture file')
         self.assertEqual(len(self.capfile.packets), 23,
                          'wrong number of packets!')
+
+    def test_lazy_import(self):
+        """
+        Test the lazy packet parsing against the regular implementation.
+        """
+        # Load the savefile again, but create an iterator for the
+        # packets instead of reading them all into memory at once.
+        tfile = create_pcap()
+        capfile_gen = savefile.load_savefile(tfile, lazy=True)
+
+        # Create a list of packets using the iterator. This way the
+        # length can be checked before comparing any content.
+        packets = list(capfile_gen.packets)
+
+        tfile.close()
+        if os.path.exists(tfile.name):
+            os.unlink(tfile.name)
+
+        self.assertEqual(len(packets), len(self.capfile.packets),
+                         'lazy parsing gives different number of packets!')
+
+        # Compare the relevant parts of the packets.
+        fields = ['timestamp', 'timestamp_ms', 'capture_len',
+                  'packet_len', 'packet']
+        for act, ref in zip(packets, capfile_gen.packets):
+            for field in fields:
+                self.assertEqual(getattr(act, field), getattr(ref, field),
+                                 'lazy parsing gives different data!')
