@@ -32,18 +32,18 @@ class pcap_packet(ctypes.Structure):
     """
     _fields_ = [('header', ctypes.POINTER(__pcap_header__)),
                 ('timestamp', ctypes.c_uint),
-                ('timestamp_ms', ctypes.c_uint),
+                ('timestamp_us', ctypes.c_uint),
                 ('capture_len', ctypes.c_uint),
                 ('packet_len', ctypes.c_uint)]
 
     packet = None
 
-    def __init__(self, header, timestamp, timestamp_ms, capture_len,
+    def __init__(self, header, timestamp, timestamp_us, capture_len,
                  packet_len, packet):
         super(pcap_packet, self).__init__()
         self.header = header
         self.timestamp = timestamp
-        self.timestamp_ms = timestamp_ms
+        self.timestamp_us = timestamp_us
         self.capture_len = capture_len
         self.packet_len = packet_len
         self.packet = packet
@@ -62,3 +62,7 @@ class pcap_packet(ctypes.Structure):
                 return str(self.packet)
         else:
             return str(self.packet)
+
+    @property
+    def timestamp_ms(self):
+        return self.timestamp_us / 1000
