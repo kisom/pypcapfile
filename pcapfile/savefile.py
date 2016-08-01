@@ -89,7 +89,7 @@ def _load_savefile_header(file_h):
         raw_savefile_header = file_h.read(24)
     except UnicodeDecodeError:
         print("\nMake sure the input file is opened in read binary, 'rb'\n")
-        raise InvalidEncoding("Could not read file. Might not be opened as binary.")
+        raise InvalidEncoding("Could not read file; it might not be opened in binary mode.")
 
     # in case the capture file is not the same endianness as ours, we have to
     # use the correct byte order for the file header
