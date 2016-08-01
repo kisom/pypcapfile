@@ -215,7 +215,7 @@ def _read_a_packet(file_h, hdrp, layers=0):
         packet_header = struct.unpack('>IIII', raw_packet_header)
     else:
         packet_header = struct.unpack('<IIII', raw_packet_header)
-    (timestamp, timestamp_ms, capture_len, packet_len) = packet_header
+    (timestamp, timestamp_us, capture_len, packet_len) = packet_header
     raw_packet_data = file_h.read(capture_len)
 
     if not raw_packet_data or len(raw_packet_data) != capture_len:
@@ -228,6 +228,6 @@ def _read_a_packet(file_h, hdrp, layers=0):
     else:
         raw_packet = binascii.hexlify(raw_packet_data)
 
-    packet = pcap_packet(hdrp, timestamp, timestamp_ms, capture_len,
+    packet = pcap_packet(hdrp, timestamp, timestamp_us, capture_len,
                          packet_len, raw_packet)
     return packet

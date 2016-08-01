@@ -87,7 +87,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(int(bytearray(packet)[14]), 69, 'invalid packet')
 
         for packet in self.capfile.packets:
-            for field in ['capture_len', 'timestamp', 'timestamp_ms',
+            for field in ['capture_len', 'timestamp', 'timestamp_us',
                           'packet', 'header', 'packet_len']:
                 self.assertTrue(hasattr(packet, field), 'invalid packet!')
 
@@ -128,7 +128,7 @@ class TestCase(unittest.TestCase):
                          'lazy parsing gives different number of packets!')
 
         # Compare the relevant parts of the packets.
-        fields = ['timestamp', 'timestamp_ms', 'capture_len',
+        fields = ['timestamp', 'timestamp_us', 'capture_len',
                   'packet_len', 'packet']
         for act, ref in zip(packets, capfile_gen.packets):
             for field in fields:
