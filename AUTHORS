@@ -13,3 +13,4 @@
         - added support for large captures
 - Marco 'don' Kaulea (https://github.com/Don42)
         - fixed error in setup.py
+        - rename misnamed variable
