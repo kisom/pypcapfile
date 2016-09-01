@@ -7,7 +7,7 @@ import binascii
 import ctypes
 import struct
 
-NOT_PRINT = ['rtap', 'packet', 'fc']
+NOT_PRINT = ['rtap', 'packet', 'fc', 'info']
 
 CATEGORY = {}
 
@@ -37,6 +37,8 @@ class Wifi(ctypes.Structure):
         self.wep = self.flags & 01000000
         self.order = self.flags & 10000000
 
+        self.duration = struct.unpack('H', self.packet[2:4])[0] # us
+
         if self.category in self._categories_.keys():
             if self.category == 0:
                 self.info = self.Management(self.packet, self.subtype)
@@ -48,6 +50,8 @@ class Wifi(ctypes.Structure):
     def print_info(self):
         """prints attributes of object"""
         attrs = vars(self)
+        attrs.update(vars(self.info))
+        attrs.update(vars(self.info.ctx))
         for key, val in attrs.items():
             if key not in NOT_PRINT:
                 print "{}: {}".format(key, val)
@@ -157,9 +161,13 @@ class Wifi(ctypes.Structure):
                 """Constructor Method
                 :packet: ctypes.Structure
                 """
-                self.tx_mac = 'tx_mac'
-                self.rx_mac = 'rx_mac'
-                self.duration = 'duration'
+                (rx_mac, tx_mac) = struct.unpack('!6s6s', packet[4:16])
+                rx_mac = bytearray(rx_mac)
+                tx_mac = bytearray(tx_mac)
+                self.ra = b':'.join([('%02x' % o).encode('ascii')
+                    for o in rx_mac])
+                self.ta = b':'.join([('%02x' % o).encode('ascii')
+                    for o in tx_mac])
 
         class CTS(ctypes.Structure):
 
@@ -169,8 +177,10 @@ class Wifi(ctypes.Structure):
                 """Constructor Method
                 :packet: ctypes.Structure
                 """
-                self.rx_mac = 'rx_mac'
-                self.duration = 'duration'
+                rx_mac = struct.unpack('!6s', packet[4:10])[0]
+                rx_mac = bytearray(rx_mac)
+                self.ra = b':'.join([('%02x' % o).encode('ascii')
+                    for o in rx_mac])
 
         class BACK(ctypes.Structure):
 
@@ -180,6 +190,16 @@ class Wifi(ctypes.Structure):
                 """Constructor Method
                 :packet: ctypes.Structure
                 """
-                self.tx_mac = 'tx_mac'
-                self.bitmap = 'bitmap'
-                self.seq_num = 'seq_num'
+                (rx_mac, tx_mac) = struct.unpack('!6s6s', packet[4:16])
+                rx_mac = bytearray(rx_mac)
+                tx_mac = bytearray(tx_mac)
+                self.ra = b':'.join([('%02x' % o).encode('ascii')
+                    for o in rx_mac])
+                self.ta = b':'.join([('%02x' % o).encode('ascii')
+                    for o in tx_mac])
+                self.cntrl = struct.unpack('H', packet[16:18])
+                self.seq_cntrl = struct.unpack('H', packet[18:20])
+                self.bitmap = struct.unpack('BBBBBBBB', packet[20:])
+                self.bitstr = ''
+                for elem in self.bitmap:
+                    self.bitstr += format(elem, '08b')[::-1]
