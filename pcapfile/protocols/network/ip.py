@@ -109,6 +109,9 @@ def payload_type(protocol):
     if protocol == 0x11:
         from pcapfile.protocols.transport.udp import UDP
         return (UDP, 'UDP')
+    elif protocol == 0x06:
+        from pcapfile.protocols.transport.tcp import TCP
+        return (TCP, 'TCP')
     else:
         return (None, 'unknown')
 
