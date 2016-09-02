@@ -34,8 +34,8 @@ class IP(ctypes.Structure):
                 (magic & 0b0111) > 4), 'not an IPv4 packet.'
 
         fields = struct.unpack('!BBHHHBBHII', packet[:20])
-        self.v = fields[0] & 0b1100
-        self.hl = fields[0] & 0b0111
+        self.v = fields[0] >> 4
+        self.hl = fields[0] & 0x0f
         self.tos = fields[1]
         self.len = fields[2]
         self.id = fields[3]
@@ -47,10 +47,11 @@ class IP(ctypes.Structure):
         self.src = ctypes.c_char_p(parse_ipv4(fields[8]))
         self.dst = ctypes.c_char_p(parse_ipv4(fields[9]))
 
-        if self.hl > 0x14:
-            start = 0x15
-            end = self.len - 0x14
+        if self.hl > 5:
+            start = 20
+            end = self.len - 20
             self.opt = binascii.hexlify(packet[start:end])
+            self.payload = binascii.hexlify(packet[end:])
         else:
             self.opt = b'\x00'
             self.payload = binascii.hexlify(packet[0x14:])
