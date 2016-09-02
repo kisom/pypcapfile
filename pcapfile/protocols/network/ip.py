@@ -48,11 +48,10 @@ class IP(ctypes.Structure):
         self.dst = ctypes.c_char_p(parse_ipv4(fields[9]))
 
         if self.hl > 5:
-            start = 20
-            end = self.len - 20
-            self.opt = binascii.hexlify(packet[start:end])
-            self.payload = binascii.hexlify(packet[end:])
-            self.opt_parsed = parse_options(packet[start:end])
+            payload_start = self.hl * 4
+            self.opt = binascii.hexlify(packet[0x14:payload_start])
+            self.payload = binascii.hexlify(packet[payload_start:])
+            self.opt_parsed = parse_options(binascii.unhexlify(self.opt))
         else:
             self.opt = b'\x00'
             self.payload = binascii.hexlify(packet[0x14:])
