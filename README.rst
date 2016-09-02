@@ -129,9 +129,9 @@ The interface is still a bit messy.
 Future planned improvements
 ---------------------------
 
--  IP option handling
+-  IP options parsing (END and NOP is supported)
 -  IPv6 support
--  TCP and UDP support
+-  TCP options parsing
 -  ARP support
 
 TODO
