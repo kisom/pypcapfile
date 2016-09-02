@@ -134,6 +134,11 @@ def parse_options(opt_bytes):
             break # invalid
 
         # Custom options parsing goes here
+        if opt_type == 0x55:
+            if opt_len < 1+1+2+4+8:
+                break # invalid
+            _, _, _, _, uat = struct.unpack('!BBHIQ', opt_bytes[:16])
+            opts['uat'] = uat
 
         i += opt_len
         l -= opt_len
