@@ -52,9 +52,11 @@ class IP(ctypes.Structure):
             end = self.len - 20
             self.opt = binascii.hexlify(packet[start:end])
             self.payload = binascii.hexlify(packet[end:])
+            self.opt_parsed = parse_options(packet[start:end])
         else:
             self.opt = b'\x00'
             self.payload = binascii.hexlify(packet[0x14:])
+            self.opt_parsed = { }
 
         self.pad = b'\x00'
 
@@ -110,3 +112,30 @@ def payload_type(protocol):
         return (UDP, 'UDP')
     else:
         return (None, 'unknown')
+
+def parse_options(opt_bytes):
+    opts = { }
+
+    i = 0
+    l = len(opt_bytes) # unprocessed length
+    while l:
+        opt_type = opt_bytes[i]
+        if opt_type == 0: # end
+            break
+        if opt_type == 1: # NOP
+            i += 1
+            l -= 1
+            continue
+
+        if l < 2:
+            break # invalid
+        opt_len = opt_bytes[i+1]
+        if opt_len < 2 or opt_len > l:
+            break # invalid
+
+        # Custom options parsing goes here
+
+        i += opt_len
+        l -= opt_len
+
+    return opts
