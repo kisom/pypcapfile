@@ -46,8 +46,6 @@ class TCP(ctypes.Structure):
 
         self.sum = fields[6]
         urg_offset = 4 * fields[7] # rarely used
-        print(data_offset)
-
 
         if data_offset < 20:
             self.opt = b''
