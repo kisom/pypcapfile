@@ -29,6 +29,187 @@ _SUBTYPES_[2] = {0:'Data', 1:'Data + CF-ack', 2:'Data + CF-poll',
         13:'Reserved', 14:'Qos + CF-poll(no data)',
         15:'Qos + CF-ack(no data)'}
 
+class Radiotap(ctypes.Structure):
+
+    def __init__(self, rtap_bytes):
+        """
+        :rtap_bytes: ctypes.Structure
+        see -> http://www.radiotap.org/defined-fields
+        """
+        self._raw = {} #contains raw bytes, for debugging purposes
+        self._bits = {} #contains bitstrings, for debugging purposes
+        idx = 0
+        self._rtap = rtap_bytes
+
+        idx += self.strip_vers(idx)
+        idx += self.strip_pad(idx)
+        idx += self.strip_len(idx)
+        idx += self.strip_present(idx)
+
+        if self.present_tsft:
+            idx += self.strip_tsft(idx)
+
+        if self.present_flags:
+            idx += self.strip_flags(idx)
+
+        if self.present_rate:
+            self.strip_rate(idx)
+
+        idx += 1 #null byte exists, even if rate flag = 0
+
+        if self.present_channel:
+            idx += self.strip_channel(idx)
+
+        self.prot_type = self.extract_protocol()
+
+    def strip_vers(self, idx):
+        """strip(1 byte) radiotap.version
+        :idx: int
+        :returns: int
+            number of processed bytes
+        """
+        self.vers = struct.unpack('B', self._rtap[idx])[0]
+        return 1
+
+    def strip_pad(self, idx):
+        """strip(1 byte) radiotap.pad
+        :idx: int
+        :returns: int
+            number of processed bytes
+        """
+        self.pad = struct.unpack('B', self._rtap[idx])[0]
+        return 1
+
+    def strip_len(self, idx):
+        """strip(2 byte) radiotap.length
+        :idx: int
+        :returns: int
+            number of processed bytes
+        """
+        self.len = struct.unpack('H', self._rtap[idx:idx+2])[0]
+        return 2
+
+    def strip_present(self, idx):
+        """strip(4 byte) radiotap.present. Those are flags that
+        identify existence of incoming radiotap meta-data.
+        :idx: int
+        :returns: int
+            number of processed bytes
+        """
+        self._raw['present'] = self._rtap[idx:idx+4]
+        present_val = struct.unpack('<L', self._raw['present'])[0]
+        self._bits['present'] = format(present_val, '032b')[::-1]
+        self.present_tsft = int(self._bits['present'][0])
+        self.present_flags = int(self._bits['present'][1])
+        self.present_rate = int(self._bits['present'][2])
+        self.present_channel = int(self._bits['present'][3])
+        self.present_fhss = int(self._bits['present'][4])
+        self.present_dbm_antsignal = int(self._bits['present'][5])
+        self.present_dbm_antnoise = int(self._bits['present'][6])
+        self.present_lock_quality = int(self._bits['present'][7])
+        self.present_tx_attenuation = int(self._bits['present'][8])
+        self.present_dbm_tx_attenuation = int(self._bits['present'][9])
+        self.present_dbm_tx_power = int(self._bits['present'][10])
+        self.present_antenna = int(self._bits['present'][11])
+        self.present_db_antsignal = int(self._bits['present'][12])
+        self.present_db_antnoise = int(self._bits['present'][13])
+        self.present_rxflags = self._bits['present'][14:18]
+        self.present_xchannel = int(self._bits['present'][18])
+        self.present_mcs = int(self._bits['present'][19])
+        self.present_ampdu = int(self._bits['present'][20])
+        self.present_vht = int(self._bits['present'][21])
+        return 4
+
+    def strip_tsft(self, idx):
+        """strip(8 byte) radiotap.mactime timestap value
+        :idx: int
+        :returns: int
+            number of processed bytes
+        """
+        self._raw['mactime'] = self._rtap[idx:idx+8]
+        self.mactime = struct.unpack('Q', self._raw['mactime'])[0]
+        return 8
+
+    def strip_flags(self, idx):
+        """strip(1 byte) radiotap.flags
+        :idx: int
+        :returns: int
+            number of processed bytes
+        """
+        self._raw['flags'] = self._rtap[idx:idx+1]
+        flags = struct.unpack('<B', self._raw['flags'])[0]
+        self._bits['flags'] = format(flags, '08b')[::-1]
+        self.cfp = int(self._bits['flags'][0])
+        self.preamble = int(self._bits['flags'][1])
+        self.wep = int(self._bits['flags'][2])
+        self.fragmentation = int(self._bits['flags'][3])
+        self.fcs = int(self._bits['flags'][4])
+        self.datapad = int(self._bits['flags'][5])
+        self.badfcs = int(self._bits['flags'][6])
+        self.shortgi = int(self._bits['flags'][7])
+        return 1
+
+    def strip_rate(self, idx):
+        """strip(1 byte) radiotap.datarate
+        note that, unit of this field is 0.5 Mbps
+        """
+        self._raw['rate'] = self._rtap[idx]
+        rate_unit = float(1) / 2 #Mbps
+        self.rate = rate_unit * struct.unpack('b', self._raw['rate'])[0] #Mbps
+
+    def strip_channel(self, idx):
+        """strip radiotap.channel.freq(2 byte) and
+        radiotap.channel.flags(2 byte)
+        :idx: int
+        :returns: int
+            number of processed bytes
+        """
+        self._raw['channel_freq'] = self._rtap[idx:idx+2]
+        self._raw['channel_flags'] = self._rtap[idx+2:idx+4]
+        self.chan_freq = struct.unpack('H', self._raw['channel_freq'])[0]
+        chan_flags = struct.unpack('H', self._raw['channel_flags'])[0]
+        self._bits['channel_flags'] = format(chan_flags, '016b')[::-1]
+
+        self.chan_turbo = int(self._bits['channel_flags'][4])
+        self.chan_cck = int(self._bits['channel_flags'][5])
+        self.chan_ofdm = int(self._bits['channel_flags'][6])
+        self.chan_2ghz = int(self._bits['channel_flags'][7])
+        self.chan_5ghz = int(self._bits['channel_flags'][8])
+        self.chan_passive = int(self._bits['channel_flags'][9])
+        self.chan_dynamic = int(self._bits['channel_flags'][10])
+        self.chan_gfsk = int(self._bits['channel_flags'][11])
+        self.chan_gsm = int(self._bits['channel_flags'][12])
+        self.chan_static_turbo = int(self._bits['channel_flags'][13])
+        self.chan_half_rate = int(self._bits['channel_flags'][14])
+        self.chan_quarter_rate = int(self._bits['channel_flags'][15])
+        return 4
+
+    def extract_protocol(self):
+        """extract 802.11 protocol from radiotap.channel.flags
+        :return: str
+            protocol name
+            one of below in success
+            [.11a, .11b, .11g, .11n, .11ac]
+            None in fail
+        """
+        if self.present_mcs:
+            return '.11n'
+
+        if self.present_vht:
+            return '.11ac'
+
+        if self.present_channel:
+            if self.chan_5ghz:
+                if self.chan_ofdm:
+                    return '.11a'
+            elif self.chan_2ghz:
+                if self.chan_cck:
+                    return '.11b'
+                elif self.chan_ofdm or self.chan_dynamic:
+                    return '.11g'
+        print "No protocol match with radiotap.channel.flags"
+        return 'None'
+
 class WiHelper:
 
     @staticmethod
@@ -95,6 +276,7 @@ class WiHelper:
         r_len = struct.unpack('H', frame[2:4])
         return r_len[0]
 
+
 class Wifi(ctypes.Structure):
 
     def __init__(self, frame):
@@ -102,8 +284,11 @@ class Wifi(ctypes.Structure):
         of all Wi-Fi frames.
         :frame: ctypes.Structure
         """
-        self.rtap, self.packet = WiHelper._strip_rtap(frame)
-        self.fc = struct.unpack('BB', self.packet[:2]) #frame control
+        self._raw = {}
+        rtap_bytes, self._packet = WiHelper._strip_rtap(frame)
+        self.radiotap = Radiotap(rtap_bytes)
+
+        self.fc = struct.unpack('BB', self._packet[:2]) #frame control
         self.flags = self.fc[1]
         self.vers = self.fc[0] & 0b0011
         self.category = (self.fc[0] >> 2) & 0b0011
@@ -119,7 +304,7 @@ class Wifi(ctypes.Structure):
         self.wep = int(self.flag_bits[6])
         self.order = int(self.flag_bits[7])
 
-        self.duration = struct.unpack('H', self.packet[2:4])[0] # us
+        self.duration = struct.unpack('H', self._packet[2:4])[0] # us
         
         self.name = None
         if self.category == 0:
@@ -135,12 +320,25 @@ class Wifi(ctypes.Structure):
         if self.name != None:
             print self.name
 
-    def print_info(self):
-        """prints attributes of object"""
-        attrs = vars(self)
+    def print_all(self):
+        """prints packet headers + radiotap headers"""
+        self.print_packet()
+        self.print_rtap()
 
+    def print_packet(self):
+        """prints packet headers (main object)"""
+        print "*** PACKET INFORMATION ***"
+        attrs = vars(self)
         for key, val in attrs.items():
-            if key != 'packet' and key != 'rtap':
+            if key[0] != '_':
+                print "{}: {}".format(key, val)
+
+    def print_rtap(self):
+        """prints radiotap headers (radiotap object)"""
+        print "*** RADIOTAP INFORMATION ***"
+        attrs = vars(self.radiotap)
+        for key, val in attrs.items():
+            if key[0] != '_':
                 print "{}: {}".format(key, val)
 
     @staticmethod
@@ -193,18 +391,18 @@ class QosData(Data):
 
         if self.to_ds == 1 and self.from_ds == 1:
             (ra_mac, ta_mac, da_mac) =\
-                struct.unpack('!6s6s6s', self.packet[4:22])
-            sa_mac = struct.unpack('!6s', self.packet[24:30])[0]
+                struct.unpack('!6s6s6s', self._packet[4:22])
+            sa_mac = struct.unpack('!6s', self._packet[24:30])[0]
             qos_idx = 30
             seq_idx = 22 
         elif self.to_ds == 0 and self.from_ds == 1:
             (ra_mac, ta_mac, sa_mac) =\
-                struct.unpack('!6s6s6s', self.packet[4:22])
+                struct.unpack('!6s6s6s', self._packet[4:22])
             qos_idx = 22
             seq_idx = qos_idx
         elif self.to_ds == 1 and self.from_ds == 0:
             (ra_mac, ta_mac, da_mac) =\
-                struct.unpack('!6s6s6s', self.packet[4:22])
+                struct.unpack('!6s6s6s', self._packet[4:22])
             qos_idx = 22
             seq_idx = qos_idx
         
@@ -258,7 +456,7 @@ class RTS(Control):
         :frame: ctypes.Structure
         """
         Control.__init__(self, frame)
-        (ra_mac, ta_mac) = struct.unpack('!6s6s', self.packet[4:16])
+        (ra_mac, ta_mac) = struct.unpack('!6s6s', self._packet[4:16])
         self.ra = Wifi.get_mac_addr(ra_mac)
         self.ta = Wifi.get_mac_addr(ta_mac)
 
@@ -271,7 +469,7 @@ class CTS(Control):
         :frame: ctypes.Structure
         """
         Control.__init__(self, frame)
-        ra_mac = struct.unpack('!6s', self.packet[4:10])[0]
+        ra_mac = struct.unpack('!6s', self._packet[4:10])[0]
         self.ra = Wifi.get_mac_addr(ra_mac)
 
 class BACK(Control):
@@ -283,15 +481,48 @@ class BACK(Control):
         :frame: ctypes.Structure
         """
         Control.__init__(self, frame)
-        (ra_mac, ta_mac) = struct.unpack('!6s6s', self.packet[4:16])
+        (ra_mac, ta_mac) = struct.unpack('!6s6s', self._packet[4:16])
         self.ra = Wifi.get_mac_addr(ra_mac)
         self.ta = Wifi.get_mac_addr(ta_mac)
-        self.cntrl = struct.unpack('H', self.packet[16:18])[0]
-        #TODO: parse Immediate BAR-ack policy, MultiTID flag
-        #      Compressed Bitmap Flag, reserverd field and TID
-        self.seq_cntrl = struct.unpack('H', self.packet[18:20])[0]
-        #TODO: parse starting sequence number and fragment
-        self.bitmap = struct.unpack('BBBBBBBB', self.packet[20:])
+        self.acked_seqs = []
+
+        self.strip_cntrl()
+        self.strip_ssc()
+        self.strip_bitmap_str()
+        self.acked_seqs = self.extract_acked_seqs()
+
+    def strip_cntrl(self):
+        """strip(2 byte) wlan.ba.control
+        """
+        self.cntrl = struct.unpack('H', self._packet[16:18])[0] #block ack request control
+        self._cntrl_bits = format(self.cntrl, '016b')[::-1]
+        self.ackpolicy = int(self._cntrl_bits[0])
+        self.multitid = int(self._cntrl_bits[1])
+
+    def strip_ssc(self):
+        """strip(2 byte) wlan_mgt.fixed.ssc
+        """
+        self.ssc = struct.unpack('H', self._packet[18:20])[0] #starting sequence control
+        self.ssc_sequence = self.ssc >> 4
+        self.ssc_frag = self.ssc & 0x0f
+
+    def strip_bitmap_str(self):
+        """strip(8 byte) wlan.ba.bm
+        """
+        self.bitmap = struct.unpack('BBBBBBBB', self._packet[20:28])
         self.bitmap_str = ''
         for elem in self.bitmap:
             self.bitmap_str += format(elem, '08b')[::-1]
+
+    def extract_acked_seqs(self):
+        """extracts acknowledged sequences from bitmap and
+        starting sequence number.
+        :return: int[]
+            acknowledged sequence numbers
+        """
+        acked_seqs = []
+        for idx, val in enumerate(self.bitmap_str):
+           if int(val) == 1:
+              seq = (self.ssc_sequence + idx) % 4096
+              acked_seqs.append(seq)
+        return acked_seqs
