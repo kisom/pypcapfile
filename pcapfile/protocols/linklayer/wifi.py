@@ -368,12 +368,20 @@ class QosData(Data):
 
     def __init__(self, frame):
         Data.__init__(self, frame)
-        seq_idx, qos_idx  = self.get_mac_addrs(self.to_ds, self.from_ds)
+        idx = 0
+        seq_idx, qos_idx  = self.strip_mac_addrs(self.to_ds, self.from_ds)
         self.seq_idx = seq_idx
         self.qos_idx = qos_idx
 
-    def get_mac_addrs(self, to_ds, from_ds):
-        """parses mac address information and
+        self.strip_seq_cntrl(seq_idx)
+        idx = qos_idx
+        idx += self.strip_qos_cntrl(idx)
+
+        if self.amsdupresent != None:
+            self.amsdu_packets = []
+
+    def strip_mac_addrs(self, to_ds, from_ds):
+        """strip mac address(each 6 byte) information and
         sets into object.
         (wlan.ta, wlan.ra, wlan.sa, wlan.da)
         (transmitter, receiver, source, destination)
@@ -417,14 +425,77 @@ class QosData(Data):
 
         return seq_idx, qos_idx
 
-    def parse_seq_cntrl(seq_cntrl):
-        """
+    def strip_seq_cntrl(idx):
+        """strip(2 byte) wlan.seq(12 bit) and wlan.fram(4 bit)
+        number information.
         :seq_cntrl: ctypes.Structure
         :return: int
-            sequence number
-        :return: int
-            fragment number
         """
+        seq_cntrl = struct.unpack('H', self._packet[idx:idx+2])
+        self.seq_num = seq_cntrl >> 4
+        self.frag_num = seq_cntrl & 0x000f
+
+    def strip_qos_cntrl(idx):
+        """strip(2 byte) wlan.qos.
+        :returns: int
+            number of processed bytes
+        """
+        #TODO: parse remaining fields with respect to from_ds and to_ds
+        #https://mrncciew.com/2014/10/03/cwap-mac-header-qos-control/
+        #TODO: check .11n sniffs (snice a-msdu first introduced in .11n)
+        qos_cntrl = struct.unpack('H', self._packet[idx:idx+2])
+        self._qos_cntrl_bits = format(qos_cntrl, '016b')[::-1]
+        self.qos_priority = qos_cntrl & 0x000f
+        self.amsdupresent = None
+        if self.radiotap.prot_type == '.11ac':
+            self.amsdupresent = int(self._qos_cntrl_bits[7])
+
+    def strip_msdu(self, idx):
+        """strip single mac servis data unit(msdu)
+        :idx: int
+        :return: dict
+            msdu
+        :return: int
+            number of processed bytes
+        """
+        msdu = {}
+        msdu['llc'] = {}
+
+        (da_mac, sa_mac) = struct.unpack('!6s6s', self._packet[idx:idx+12])
+        msdu['wlan.da'] = Wifi.get_mac_addr(da_mac)
+        msdu['wlan.sa'] = Wifi.get_mac_addr(sa_mac)
+        idx += 12
+        offset, msdu['llc'] = self.strip_llc(idx)
+        idx += offset
+        msdu['msdu.length'] = struct.unpack('!H', self._packet[idx:idx+2])[0]
+        idx += 2
+
+
+    def strip_llc(self, idx):
+        """strip(4 or 8 byte) logical link control headers
+        :return: int
+            number of processed bytes
+        :return: dict
+            llc information
+        see -> http://www.wildpackets.com/resources/compendium/ethernet/frame_snap_iee8023
+        """
+        #TODO: find length of llc header for all combinations of sap and dsap values
+        llc = {}
+        llc_dsap = struct.unpack('B', self._packet[idx])[0]
+        llc['dsap.dsap'] = llc_dsap >> 1
+        llc['dsap.ig'] = llc_dsap & 0b01
+        llc_ssap = struct.unpack('B', self._packet[idx+1])[0]
+        llc['ssap.sap'] = llc_ssap >> 1
+        llc['ssap.cr'] = llc_ssap & 0b01
+        if llc_dsap == 170 and llc_ssap == 170:
+            llc_control = struct.unpack('B', self._packet[idx+1:idx+3])[0]
+            llc['control.u_modifier_cmd'] = llc_control >> 2
+            llc['control.ftype'] = llc_control & 0x03
+            llc['organization_code'] = self.packet[idx+2:idx+5]
+            llc['type'] = self.packet[idx+5:idx+7]
+            return 8, llc
+        else:
+            return 4, llc
 
 class Management(Wifi):
 
@@ -504,7 +575,7 @@ class BACK(Control):
         """
         self.ssc = struct.unpack('H', self._packet[18:20])[0] #starting sequence control
         self.ssc_sequence = self.ssc >> 4
-        self.ssc_frag = self.ssc & 0x0f
+        self.ssc_frag = self.ssc & 0x000f
 
     def strip_bitmap_str(self):
         """strip(8 byte) wlan.ba.bm
