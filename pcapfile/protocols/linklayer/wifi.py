@@ -29,10 +29,97 @@ _SUBTYPES_[2] = {0:'Data', 1:'Data + CF-ack', 2:'Data + CF-poll',
         13:'Reserved', 14:'Qos + CF-poll(no data)',
         15:'Qos + CF-ack(no data)'}
 
+def WIFI(frame):
+    """
+    :frame: ctypes.Structure
+    """
+    return WiHelper.get_wifi_packet(frame)
+
+class WiHelper:
+
+    """Wi-Fi packet discriminator class.
+    Identifies type and subtype of packet, then trigs
+    packet object creation.
+    """
+
+    @staticmethod
+    def get_wifi_packet(frame):
+        """Discriminates Wi-Fi packet and creates
+        packet object.
+        use obj.print_all() to get all header information.
+        use obj.print_packet() to get layer 2 header information.
+        use obj.print_rtap() to get radiotap header information.
+        :frame: ctypes.Structure
+        :returns: obj
+            Wi-Fi packet
+        """
+        rtap, packet = WiHelper._strip_rtap(frame)
+        frame_control = struct.unpack('BB', packet[:2])
+        flags = frame_control[:1]
+        cat = (frame_control[0] >> 2) & 0b0011
+        s_type = frame_control[0] >> 4
+
+        if cat not in _CATEGORIES_.keys():
+            print "invalid format"
+            return None
+
+        if s_type not in _SUBTYPES_[cat].keys():
+            print "invalid subtype {} in {} category".format(s_type,
+                    _CATEGORIES_[cat])
+            return None
+
+        print "category:{}, subtype: {}".format(cat, s_type)
+
+        if cat == 0:
+            return Management(frame)
+        elif cat == 1:
+            if s_type == 11:
+                return RTS(frame)
+            elif s_type == 12:
+                return CTS(frame)
+            elif s_type == 9:
+                return BACK(frame)
+            else:
+                return Control(frame)
+        elif cat == 2:
+            if s_type == 8:
+                return QosData(frame)
+            else:
+                return Data(frame)
+
+    @staticmethod
+    def _strip_rtap(frame):
+        """strip injected radiotap header.
+        :return: ctypes.Structure
+            radiotap header
+        :return: ctypes.Structure
+            actual layer 2 Wi-Fi payload
+        """
+        rtap_len = WiHelper.__get_rtap_len(frame)
+        rtap = frame[:rtap_len-1]
+        packet = frame[rtap_len:]
+        return rtap, packet
+
+    @staticmethod
+    def __get_rtap_len(frame):
+        """parse length of radiotap header.
+        :packet: ctypes.structure
+        :returns: int
+        """
+        r_len = struct.unpack('H', frame[2:4])
+        return r_len[0]
+
 class Radiotap(ctypes.Structure):
 
+    """Radiotap Header Parser Class.
+    Radiotap headers summarizes physical layer headers
+    of Wi-Fi packet, such as MCS(modulation and coding scheme),
+    NSS(number of spatial streams), BW(bandwidth) for all common
+    protocol types(802.11a, 802.11n, 802.11ac etc.)
+    """
+
     def __init__(self, rtap_bytes):
-        """
+        """Constructor method.
         :rtap_bytes: ctypes.Structure
         see -> http://www.radiotap.org/defined-fields
         """
@@ -210,78 +297,13 @@ class Radiotap(ctypes.Structure):
         print "No protocol match with radiotap.channel.flags"
         return 'None'
 
-class WiHelper:
-
-    @staticmethod
-    def get_wifi_packet(frame):
-        """returns Wi-Fi packet object.
-        use obj.print_info() to get packet
-        information.
-        :frame: ctypes.Structure
-        :returns: obj
-        """
-        rtap, packet = WiHelper._strip_rtap(frame)
-        frame_control = struct.unpack('BB', packet[:2])
-        flags = frame_control[:1]
-        cat = (frame_control[0] >> 2) & 0b0011
-        s_type = frame_control[0] >> 4
-
-        if cat not in _CATEGORIES_.keys():
-            print "invalid format"
-            return None
-
-        if s_type not in _SUBTYPES_[cat].keys():
-            print "invalid subtype {} in {} category".format(s_type,
-                    _CATEGORIES_[cat])
-            return None
-
-        print "category:{}, subtype: {}".format(cat, s_type)
-
-        if cat == 0:
-            return Management(frame)
-        elif cat == 1:
-            if s_type == 11:
-                return RTS(frame)
-            elif s_type == 12:
-                return CTS(frame)
-            elif s_type == 9:
-                return BACK(frame)
-            else:
-                return Control(frame)
-        elif cat == 2:
-            if s_type == 8:
-                return QosData(frame)
-            else:
-                return Data(frame)
-
-    @staticmethod
-    def _strip_rtap(frame):
-        """strip injected radiotap header
-        :return: ctypes.Structure
-            radiotap header
-        :return: ctypes.Structure
-            actual layer 2 Wi-Fi payload
-        """
-        rtap_len = WiHelper.__get_rtap_len(frame)
-        rtap = frame[:rtap_len-1]
-        packet = frame[rtap_len:]
-        return rtap, packet
-
-    @staticmethod
-    def __get_rtap_len(frame):
-        """parses length of radiotap header
-        :packet: ctypes.structure
-        :returns: int
-        """
-        r_len = struct.unpack('H', frame[2:4])
-        return r_len[0]
-
-
 class Wifi(ctypes.Structure):
 
+    """Base Wi-Fi Packet"""
+
     def __init__(self, frame):
-        """Constructor method. Parses common headers
-        of all Wi-Fi frames.
+        """Constructor method.
+        Parse common headers of all Wi-Fi frames.
         :frame: ctypes.Structure
         """
         self._raw = {}
@@ -356,18 +378,24 @@ class Wifi(ctypes.Structure):
 
 class Data(Wifi):
 
-    """Data Packet Constructor"""
+    """Base Data Packet (type: 2)"""
 
     def __init__(self, frame):
-        """Constructor Method
+        """Constructor method.
         :packet: ctypes.Structure
         """
         Wifi.__init__(self, frame)
 
 class QosData(Data):
 
+    """Qos Data (type: 2, subtype: 8)"""
+
     def __init__(self, frame):
+        """Constructor method.
+        :frame: ctypes.Structure
+        """
         Data.__init__(self, frame)
+        self.payload = []
         idx = 0
         seq_idx, qos_idx  = self.strip_mac_addrs(self.to_ds, self.from_ds)
         self.seq_idx = seq_idx
@@ -378,7 +406,12 @@ class QosData(Data):
         idx += self.strip_qos_cntrl(idx)
 
         if self.amsdupresent != None:
-            self.amsdu_packets = []
+            while idx < len(self._packet):
+                msdu, offset = self.strip_msdu(idx)
+                self.payload.append(msdu)
+                idx += offset
+        else:
+            self.payload.append(self._packet[idx:])
 
     def strip_mac_addrs(self, to_ds, from_ds):
         """strip mac address(each 6 byte) information and
@@ -425,17 +458,17 @@ class QosData(Data):
 
         return seq_idx, qos_idx
 
-    def strip_seq_cntrl(idx):
+    def strip_seq_cntrl(self, idx):
         """strip(2 byte) wlan.seq(12 bit) and wlan.fram(4 bit)
         number information.
         :seq_cntrl: ctypes.Structure
         :return: int
         """
-        seq_cntrl = struct.unpack('H', self._packet[idx:idx+2])
+        seq_cntrl = struct.unpack('H', self._packet[idx:idx+2])[0]
         self.seq_num = seq_cntrl >> 4
         self.frag_num = seq_cntrl & 0x000f
 
-    def strip_qos_cntrl(idx):
+    def strip_qos_cntrl(self, idx):
         """strip(2 byte) wlan.qos.
         :returns: int
             number of processed bytes
@@ -443,21 +476,26 @@ class QosData(Data):
         #TODO: parse remaining fields with respect to from_ds and to_ds
         #https://mrncciew.com/2014/10/03/cwap-mac-header-qos-control/
         #TODO: check .11n sniffs (snice a-msdu first introduced in .11n)
-        qos_cntrl = struct.unpack('H', self._packet[idx:idx+2])
+        qos_cntrl = struct.unpack('H', self._packet[idx:idx+2])[0]
         self._qos_cntrl_bits = format(qos_cntrl, '016b')[::-1]
         self.qos_priority = qos_cntrl & 0x000f
         self.amsdupresent = None
         if self.radiotap.prot_type == '.11ac':
             self.amsdupresent = int(self._qos_cntrl_bits[7])
+        return 2
 
     def strip_msdu(self, idx):
         """strip single mac servis data unit(msdu)
+i       see -> https://mrncciew.com/2014/11/01/cwap-802-11-data-frame-aggregation/
         :idx: int
         :return: dict
             msdu
         :return: int
             number of processed bytes
         """
+        padding = 0 # length of msdu payload has to be multiple of 4,
+                    # this guaranteed with padding
+        len_payload = 0
         msdu = {}
         msdu['llc'] = {}
 
@@ -465,11 +503,14 @@ class QosData(Data):
         msdu['wlan.da'] = Wifi.get_mac_addr(da_mac)
         msdu['wlan.sa'] = Wifi.get_mac_addr(sa_mac)
         idx += 12
+        msdu['length'] = struct.unpack('!H', self._packet[idx:idx+2])[0]
+        idx += 2
         offset, msdu['llc'] = self.strip_llc(idx)
         idx += offset
-        msdu['msdu.length'] = struct.unpack('!H', self._packet[idx:idx+2])[0]
-        idx += 2
-
+        len_payload = msdu['length'] - offset
+        msdu['payload'] = self._packet[idx:idx+len_payload]
+        padding = 4 - (len_payload % 4)
+        return msdu, msdu['length']+padding+12
 
     def strip_llc(self, idx):
         """strip(4 or 8 byte) logical link control headers
@@ -480,6 +521,7 @@ class QosData(Data):
         see -> http://www.wildpackets.com/resources/compendium/ethernet/frame_snap_iee8023
         """
         #TODO: find length of llc header for all combinations of sap and dsap values
+        #TODO: write own llc class
         llc = {}
         llc_dsap = struct.unpack('B', self._packet[idx])[0]
         llc['dsap.dsap'] = llc_dsap >> 1
@@ -488,18 +530,18 @@ class QosData(Data):
         llc['ssap.sap'] = llc_ssap >> 1
         llc['ssap.cr'] = llc_ssap & 0b01
         if llc_dsap == 170 and llc_ssap == 170:
-            llc_control = struct.unpack('B', self._packet[idx+1:idx+3])[0]
+            llc_control = struct.unpack('B', self._packet[idx+2])[0]
             llc['control.u_modifier_cmd'] = llc_control >> 2
             llc['control.ftype'] = llc_control & 0x03
-            llc['organization_code'] = self.packet[idx+2:idx+5]
-            llc['type'] = self.packet[idx+5:idx+7]
+            llc['organization_code'] = self._packet[idx+2:idx+5]
+            llc['type'] = self._packet[idx+5:idx+7]
             return 8, llc
         else:
             return 4, llc
 
 class Management(Wifi):
 
-    """Management Packet Constructor"""
+    """Management Packet (type: 0)"""
 
     def __init__(self, frame):
         """Constructor Method
@@ -510,20 +552,20 @@ class Management(Wifi):
 
 class Control(Wifi):
 
-    """Control Packet Constructor"""
+    """Control Frames (type: 1)"""
 
     def __init__(self, frame):
-        """Constructor Method
+        """Constructor method.
         :frame: ctypes.Structure
         """
         Wifi.__init__(self, frame)
 
 class RTS(Control):
 
-    """Request to Send Frame"""
+    """Request to Send Frame (type: 1, subtype: 1)"""
 
     def __init__(self, frame):
-        """Constructor Method
+        """Constructor method.
         :frame: ctypes.Structure
         """
         Control.__init__(self, frame)
@@ -533,10 +575,10 @@ class RTS(Control):
 
 class CTS(Control):
 
-    """Clear to Send Frame"""
+    """Clear to Send Frame (type: 1, subtype: 2)"""
 
     def __init__(self, frame):
-        """Constructor Method
+        """Constructor method.
         :frame: ctypes.Structure
         """
         Control.__init__(self, frame)
@@ -545,10 +587,10 @@ class CTS(Control):
 
 class BACK(Control):
 
-    """Block Acknowledgement Frame"""
+    """Block Acknowledgement Frame (type: 1, subtype: 9)"""
 
     def __init__(self, frame):
-        """Constructor Method
+        """Constructor method.
         :frame: ctypes.Structure
         """
         Control.__init__(self, frame)
@@ -563,23 +605,20 @@ class BACK(Control):
         self.acked_seqs = self.extract_acked_seqs()
 
     def strip_cntrl(self):
-        """strip(2 byte) wlan.ba.control
-        """
+        """strip(2 byte) wlan.ba.control"""
         self.cntrl = struct.unpack('H', self._packet[16:18])[0] #block ack request control
         self._cntrl_bits = format(self.cntrl, '016b')[::-1]
         self.ackpolicy = int(self._cntrl_bits[0])
         self.multitid = int(self._cntrl_bits[1])
 
     def strip_ssc(self):
-        """strip(2 byte) wlan_mgt.fixed.ssc
-        """
+        """strip(2 byte) wlan_mgt.fixed.ssc"""
         self.ssc = struct.unpack('H', self._packet[18:20])[0] #starting sequence control
         self.ssc_sequence = self.ssc >> 4
         self.ssc_frag = self.ssc & 0x000f
 
     def strip_bitmap_str(self):
-        """strip(8 byte) wlan.ba.bm
-        """
+        """strip(8 byte) wlan.ba.bm"""
         self.bitmap = struct.unpack('BBBBBBBB', self._packet[20:28])
         self.bitmap_str = ''
         for elem in self.bitmap:
