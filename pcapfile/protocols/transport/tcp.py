@@ -15,6 +15,7 @@ class TCP(ctypes.Structure):
                 ('dst_port', ctypes.c_ushort),  # destination port
                 ('seqnum', ctypes.c_uint),      # sequence number
                 ('acknum', ctypes.c_uint),      # acknowledgment number
+                ('data_offset', ctypes.c_uint), # data offset in bytes
                 ('urg', ctypes.c_bool),         # URG
                 ('ack', ctypes.c_bool),         # ACK
                 ('psh', ctypes.c_bool),         # PSH
@@ -35,7 +36,7 @@ class TCP(ctypes.Structure):
         self.seqnum = fields[2]
         self.acknum = fields[3]
         
-        data_offset = 4 * (fields[4] >> 4)
+        self.data_offset = 4 * (fields[4] >> 4)
 
         self.urg = fields[5] & 32
         self.ack = fields[5] & 16
@@ -48,12 +49,12 @@ class TCP(ctypes.Structure):
         self.sum = fields[7]
         urg_offset = 4 * fields[8] # rarely used
 
-        if data_offset < 20:
+        if self.data_offset < 20:
             self.opt = b''
             self.payload = b''
         else:
-            self.opt = ctypes.c_char_p(binascii.hexlify(packet[20:data_offset]))
-            self.payload = ctypes.c_char_p(binascii.hexlify(packet[data_offset:]))
+            self.opt = ctypes.c_char_p(binascii.hexlify(packet[20:self.data_offset]))
+            self.payload = ctypes.c_char_p(binascii.hexlify(packet[self.data_offset:]))
 
     def __str__(self):
         packet = 'tcp %s packet from port %d to port %d carrying %d bytes'
@@ -67,5 +68,5 @@ class TCP(ctypes.Structure):
         return packet
 
     def __len__(self):
-        return self.udp_header_size + len(self.payload)
+        return max(self.data_offset, self.tcp_min_header_size) + len(self.payload) / 2
 

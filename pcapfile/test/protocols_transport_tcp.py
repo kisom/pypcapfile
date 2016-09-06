@@ -75,3 +75,10 @@ class TestCase(unittest.TestCase):
     def test_fin(self):
         self.assertTcp(self.packets[0], fin=False)
         self.assertTcp(self.packets[-2], fin=True)
+
+    def test_len(self):
+        for pcap_packet in self.packets:
+            frame = pcap_packet.packet
+            packet = frame.payload
+            segment = packet.payload
+            self.assertEqual(len(segment), packet.len - len(packet.opt) / 2 - 20)
