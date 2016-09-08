@@ -8,7 +8,7 @@ def read(fname):
 
 
 setup(name='pypcapfile',
-      version='0.11.1',
+      version='0.12.0',
       description=('Pure Python package for reading and parsing libpcap '
                        'savefiles.'),
       long_description=read('README.rst'),
