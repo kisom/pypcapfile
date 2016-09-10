@@ -98,8 +98,8 @@ Automatically decoding layers
     >>> print ip_packet
     ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
     >>> ip_packet = ip.IP(wifi_frame.payload[0]['payload'])
-    ipv4 packet from 192.168.2.175 to 239.255.255.250 carrying 336 bytes
     >>> print ip_packet
+    ipv4 packet from 192.168.2.175 to 239.255.255.250 carrying 336 bytes
 
 and this example:
 
