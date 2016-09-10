@@ -97,7 +97,7 @@ Automatically decoding layers
     >>> ip_packet = ip.IP(binascii.unhexlify(eth_frame.payload))
     >>> print ip_packet
     ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
-    >>> ip_packet = ip.IP(wifi_frame.payload[0]['payload'])
+    >>> ip_packet = ip.IP(wifi_frame.payload[0]['payload']) #if wifi_frame.category == 2 and wifi_frame.subtype == 8
     >>> print ip_packet
     ipv4 packet from 192.168.2.175 to 239.255.255.250 carrying 336 bytes
 
