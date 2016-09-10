@@ -14,3 +14,5 @@
 - Marco 'don' Kaulea (https://github.com/Don42)
         - fixed error in setup.py
         - rename misnamed variable
+- Kivanc Cakmak (https://github.com/kivanccakmak)
+        - added Wi-Fi support
