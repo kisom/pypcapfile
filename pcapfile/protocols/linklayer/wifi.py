@@ -6,6 +6,7 @@ Wi-Fi protocol definitions.
 import binascii
 import ctypes
 import struct
+import logging
 
 _CATEGORIES_ = {0:'management', 1:'control', 2:'data'}
 
@@ -15,11 +16,12 @@ _SUBTYPES_[0] = {0:'Association Request',
         1:'Association Response', 2:'Reassociation Request',
         3:'Reassociation Response', 4:'Probe Request',
         5:'Probe Response', 8:'Beacon', 9:'ATIM',
-        10:'Disassociation', 11:'Authentication', 12:'Deauthentication'}
+        10:'Disassociation', 11:'Authentication', 12:'Deauthentication',
+        13:'Action', 14:'Action No ACK'}
 
-_SUBTYPES_[1] = {8:'BAR', 9:'BACK', 10:'PS-POLL',
-        11:'RTS', 12:'CTS', 13:'ACK', 14:'CF-end',
-        15:'CF-end + CF-ack'}
+_SUBTYPES_[1] = {5:'VHT NDP Announcement', 7:'Control Wrapper', 8:'BAR',
+        9:'BACK', 10:'PS-POLL', 11:'RTS', 12:'CTS', 13:'ACK',
+        14:'CF-end', 15:'CF-end + CF-ack'}
 
 _SUBTYPES_[2] = {0:'Data', 1:'Data + CF-ack', 2:'Data + CF-poll',
         3:'Data+CF-ack+CF-poll', 4:'Null', 5:'CF-ack',
@@ -30,10 +32,20 @@ _SUBTYPES_[2] = {0:'Data', 1:'Data + CF-ack', 2:'Data + CF-poll',
         15:'Qos + CF-ack(no data)'}
 
 def WIFI(frame):
-    """
+    """calls wifi packet discriminator and constructor.
     :frame: ctypes.Structure
+    :returns: packet object in success
+    :returns: int
+        -1 on known error
+    :returns: int
+        -2 on unknown error
     """
-    return WiHelper.get_wifi_packet(frame)
+    pack = None
+    try:
+        pack = WiHelper.get_wifi_packet(frame)
+    except Exception as e:
+        logging.exception("message")
+    return pack
 
 class WiHelper:
 
@@ -60,18 +72,19 @@ class WiHelper:
         s_type = frame_control[0] >> 4
 
         if cat not in _CATEGORIES_.keys():
-            print "invalid format"
-            return None
+            print "invalid category: {}".format(cat)
+            return -1
 
         if s_type not in _SUBTYPES_[cat].keys():
             print "invalid subtype {} in {} category".format(s_type,
                     _CATEGORIES_[cat])
-            return None
-
-        print "category:{}, subtype: {}".format(cat, s_type)
+            return -1
 
         if cat == 0:
-            return Management(frame)
+            if s_type == 8:
+                return Beacon(frame)
+            else:
+                return Management(frame)
         elif cat == 1:
             if s_type == 11:
                 return RTS(frame)
@@ -294,7 +307,6 @@ class Radiotap(ctypes.Structure):
                     return '.11b'
                 elif self.chan_ofdm or self.chan_dynamic:
                     return '.11g'
-        print "No protocol match with radiotap.channel.flags"
         return 'None'
 
 class Wifi(ctypes.Structure):
@@ -339,9 +351,6 @@ class Wifi(ctypes.Structure):
             if self.subtype in _SUBTYPES_[2].keys():
                 self.name = _SUBTYPES_[2][self.subtype]
 
-        if self.name != None:
-            print self.name
-
     def print_all(self):
         """prints packet headers + radiotap headers"""
         self.print_packet()
@@ -376,6 +385,70 @@ class Wifi(ctypes.Structure):
             for o in mac_addr])
         return mac
 
+    def strip_mac_addrs(self, to_ds, from_ds):
+        """strip mac address(each 6 byte) information and
+        sets into object.
+        (wlan.ta, wlan.ra, wlan.sa, wlan.da)
+        (transmitter, receiver, source, destination)
+        :to_ds: int
+            0 or 1 [whether packet transmitted to WDS]
+        :from_ds: int
+            0 or 1 [whether packet transmitted from WDS]
+        :return: int
+            index of sequence control
+        :return: int
+            index after mac addresses
+        """
+        qos_idx, seq_idx = 0, 0
+        ta_mac, ra_mac, sa_mac, da_mac, bssid =\
+            None, None, None, None, None
+        print "blah"
+
+        if self.to_ds == 1 and self.from_ds == 1:
+            (ra_mac, ta_mac, da_mac) =\
+                struct.unpack('!6s6s6s', self._packet[4:22])
+            sa_mac = struct.unpack('!6s', self._packet[24:30])[0]
+            qos_idx = 30
+            seq_idx = 22 
+        elif self.to_ds == 0 and self.from_ds == 1:
+            (ra_mac, ta_mac, sa_mac) =\
+                struct.unpack('!6s6s6s', self._packet[4:22])
+            qos_idx = 22
+            seq_idx = qos_idx
+        elif self.to_ds == 1 and self.from_ds == 0:
+            (ra_mac, ta_mac, da_mac) =\
+                struct.unpack('!6s6s6s', self._packet[4:22])
+            qos_idx = 22
+            seq_idx = qos_idx
+        elif self.to_ds == 0 and self.from_ds == 0:
+            print "here"
+            (ra_mac, ta_mac, bssid) =\
+                struct.unpack('!6s6s6s', self._packet[4:22])
+            seq_idx = 22
+            qos_idx = None
+        
+        if ta_mac != None:
+            self.ta = Wifi.get_mac_addr(ta_mac)
+        if ra_mac != None:
+            self.ra = Wifi.get_mac_addr(ra_mac)
+        if sa_mac != None:
+            self.sa = Wifi.get_mac_addr(sa_mac)
+        if da_mac != None:
+            self.da = Wifi.get_mac_addr(da_mac)
+        if bssid != None:
+            self.bssid = Wifi.get_mac_addr(bssid)
+
+        return seq_idx, qos_idx
+
+    def strip_seq_cntrl(self, idx):
+        """strip(2 byte) wlan.seq(12 bit) and wlan.fram(4 bit)
+        number information.
+        :seq_cntrl: ctypes.Structure
+        """
+        seq_cntrl = struct.unpack('H', self._packet[idx:idx+2])[0]
+        self.seq_num = seq_cntrl >> 4
+        self.frag_num = seq_cntrl & 0x000f
+
 class Data(Wifi):
 
     """Base Data Packet (type: 2)"""
@@ -397,6 +470,8 @@ class QosData(Data):
         Data.__init__(self, frame)
         self.payload = []
         idx = 0
+        self.sa, self.ta, self.ra, self.da =\
+                None, None, None, None
         seq_idx, qos_idx  = self.strip_mac_addrs(self.to_ds, self.from_ds)
         self.seq_idx = seq_idx
         self.qos_idx = qos_idx
@@ -405,88 +480,51 @@ class QosData(Data):
         idx = qos_idx
         idx += self.strip_qos_cntrl(idx)
 
-        if self.amsdupresent != None:
+        if self.wep == 1:
+            idx += self.strip_ccmp(idx)
+
+        if self.amsdupresent != 0 and self.wep == 0:
             while idx < len(self._packet):
                 msdu, offset = self.strip_msdu(idx)
                 self.payload.append(msdu)
                 idx += offset
         else:
-            self.payload.append(self._packet[idx:])
-
-    def strip_mac_addrs(self, to_ds, from_ds):
-        """strip mac address(each 6 byte) information and
-        sets into object.
-        (wlan.ta, wlan.ra, wlan.sa, wlan.da)
-        (transmitter, receiver, source, destination)
-        :to_ds: int
-            0 or 1 [whether packet transmitted to WDS]
-        :from_ds: int
-            0 or 1 [whether packet transmitted from WDS]
-        :return: int
-            index of sequence control
-        :return: int
-            index after mac addresses
-        """
-        qos_idx, seq_idx = 0, 0
-        ta_mac, ra_mac, sa_mac, da_mac = None, None, None, None
-
-        if self.to_ds == 1 and self.from_ds == 1:
-            (ra_mac, ta_mac, da_mac) =\
-                struct.unpack('!6s6s6s', self._packet[4:22])
-            sa_mac = struct.unpack('!6s', self._packet[24:30])[0]
-            qos_idx = 30
-            seq_idx = 22 
-        elif self.to_ds == 0 and self.from_ds == 1:
-            (ra_mac, ta_mac, sa_mac) =\
-                struct.unpack('!6s6s6s', self._packet[4:22])
-            qos_idx = 22
-            seq_idx = qos_idx
-        elif self.to_ds == 1 and self.from_ds == 0:
-            (ra_mac, ta_mac, da_mac) =\
-                struct.unpack('!6s6s6s', self._packet[4:22])
-            qos_idx = 22
-            seq_idx = qos_idx
-        
-        if ta_mac != None:
-            self.ta = Wifi.get_mac_addr(ta_mac)
-        if ra_mac != None:
-            self.ra = Wifi.get_mac_addr(ra_mac)
-        if sa_mac != None:
-            self.sa = Wifi.get_mac_addr(sa_mac)
-        if da_mac != None:
-            self.da = Wifi.get_mac_addr(da_mac)
-
-        return seq_idx, qos_idx
-
-    def strip_seq_cntrl(self, idx):
-        """strip(2 byte) wlan.seq(12 bit) and wlan.fram(4 bit)
-        number information.
-        :seq_cntrl: ctypes.Structure
-        :return: int
-        """
-        seq_cntrl = struct.unpack('H', self._packet[idx:idx+2])[0]
-        self.seq_num = seq_cntrl >> 4
-        self.frag_num = seq_cntrl & 0x000f
+            if self.wep == 0:
+                msdu = {}
+                offset, llc = self.strip_llc(idx)
+                msdu['llc'] = llc
+                msdu['payload'] = self._packet[idx+offset:]
+                self.payload.append(msdu)
+            else:
+                self.payload.append({'payload': self._packet[idx:]})
 
     def strip_qos_cntrl(self, idx):
-        """strip(2 byte) wlan.qos.
+        """strip(2 byte) wlan.qos
         :returns: int
             number of processed bytes
         """
-        #TODO: parse remaining fields with respect to from_ds and to_ds
-        #https://mrncciew.com/2014/10/03/cwap-mac-header-qos-control/
-        #TODO: check .11n sniffs (snice a-msdu first introduced in .11n)
         qos_cntrl = struct.unpack('H', self._packet[idx:idx+2])[0]
         self._qos_cntrl_bits = format(qos_cntrl, '016b')[::-1]
         self.qos_priority = qos_cntrl & 0x000f
-        self.amsdupresent = None
+        self.qos_bit = int(self._qos_cntrl_bits[5])
+        self.qos_ack = int(self._qos_cntrl_bits[6:8], 2)
+        self.amsdupresent = 0
         if self.radiotap.prot_type == '.11ac':
             self.amsdupresent = int(self._qos_cntrl_bits[7])
         return 2
 
+    def strip_ccmp(self, idx):
+        """strip(8 byte) wlan.ccmp.extiv
+        CCMP Extended Initialization Vector
+        :returns: int
+            number of processed bytes
+        """
+        self.ccmp_extiv = self._packet[idx:idx+8]
+        return 8
+
     def strip_msdu(self, idx):
         """strip single mac servis data unit(msdu)
-i       see -> https://mrncciew.com/2014/11/01/cwap-802-11-data-frame-aggregation/
+        see -> https://mrncciew.com/2014/11/01/cwap-802-11-data-frame-aggregation/
         :idx: int
         :return: dict
             msdu
@@ -498,6 +536,9 @@ i       see -> https://mrncciew.com/2014/11/01/cwap-802-11-data-frame-aggregatio
         len_payload = 0
         msdu = {}
         msdu['llc'] = {}
+        msdu['wlan.da'], msdu['wlan.sa'] = None, None
+        msdu['length'] = 0
+        msdu['payload'] = None
 
         (da_mac, sa_mac) = struct.unpack('!6s6s', self._packet[idx:idx+12])
         msdu['wlan.da'] = Wifi.get_mac_addr(da_mac)
@@ -519,25 +560,37 @@ i       see -> https://mrncciew.com/2014/11/01/cwap-802-11-data-frame-aggregatio
         :return: dict
             llc information
         see -> http://www.wildpackets.com/resources/compendium/ethernet/frame_snap_iee8023
+        ABBRVS.
+        ssap: source service access point
+        dsap: destination service access point
+        SNAP(Subnetwork Acess Protocol)
         """
-        #TODO: find length of llc header for all combinations of sap and dsap values
-        #TODO: write own llc class
         llc = {}
+        snap = 170
         llc_dsap = struct.unpack('B', self._packet[idx])[0]
         llc['dsap.dsap'] = llc_dsap >> 1
         llc['dsap.ig'] = llc_dsap & 0b01
-        llc_ssap = struct.unpack('B', self._packet[idx+1])[0]
+        idx += 1
+        llc_ssap = struct.unpack('B', self._packet[idx])[0]
         llc['ssap.sap'] = llc_ssap >> 1
         llc['ssap.cr'] = llc_ssap & 0b01
-        if llc_dsap == 170 and llc_ssap == 170:
-            llc_control = struct.unpack('B', self._packet[idx+2])[0]
+        idx += 1
+        if llc_dsap == snap and llc_ssap == snap:
+            llc_control = struct.unpack('B', self._packet[idx])[0]
             llc['control.u_modifier_cmd'] = llc_control >> 2
             llc['control.ftype'] = llc_control & 0x03
-            llc['organization_code'] = self._packet[idx+2:idx+5]
-            llc['type'] = self._packet[idx+5:idx+7]
+            idx += 1
+            llc['organization_code'] = self._packet[idx:idx+3]
+            idx += 3
+            llc['type'] = self._packet[idx:idx+2]
             return 8, llc
         else:
             return 4, llc
+
+    def __str__(self):
+        frame = "%s (sa: %s, ta: %s, ra: %s, da: %s)"
+        frame = frame % (self.name, self.sa, self.ta, self.ra, self.da)
+        return frame
 
 class Management(Wifi):
 
@@ -550,6 +603,61 @@ class Management(Wifi):
         """
         Wifi.__init__(self, frame)
 
+    def __str__(self):
+        return self.name
+
+class Beacon(Management):
+
+    def __init__(self, frame):
+        """Constructor method.
+        :frame: ctypes.Structure
+        """
+        Management.__init__(self, frame)
+        idx = 0
+        seq_idx, qos_idx  = self.strip_mac_addrs(self.to_ds, self.from_ds)
+        idx = seq_idx
+        self.strip_seq_cntrl(idx)
+        idx += 2
+        self.capabilities = {}
+        self.capabilities['fixed'] = {}
+        self.capabilities['vht'] = {}
+        self.capabilities['ht'] = {}
+        idx += self.strip_fixed_params(idx)
+        self._raw_tagged_params = self._packet[idx:]
+
+    def strip_fixed_params(self, idx):
+        """strip(12 byte) wlan_mgt.fixed.all
+        :idx: int
+        :return: int
+            number of processed bytes
+        """
+        self._raw_timestamp = self._packet[idx:idx+8]
+        self.timestamp = struct.unpack('Q', self._packet[idx:idx+8])[0]
+        idx += 8
+        self.interval = struct.unpack('H', self._packet[idx:idx+2])[0]
+        idx += 2
+        fix_cap = struct.unpack('H', self._packet[idx:idx+2])[0]
+        cap_bits = format(fix_cap, '016b')[::-1]
+        self.capabilities['fixed']['ess'] = int(cap_bits[0]) #Extended Service Set
+        self.capabilities['fixed']['ibss'] = int(cap_bits[1]) #Independent Basic Service Set
+        self.capabilities['fixed']['privacy'] = int(cap_bits[4]) #Privacy
+        self.capabilities['fixed']['short_preamble'] = int(cap_bits[5]) #Short Preamble
+        self.capabilities['fixed']['pbcc'] = int(cap_bits[6]) #Packet Binary Convolutional Code
+        self.capabilities['fixed']['chan_agility'] = int(cap_bits[7]) #Channel Agility
+        self.capabilities['fixed']['spec_man'] = int(cap_bits[8]) #Spectrum Management
+        self.capabilities['fixed']['short_slot'] = int(cap_bits[9]) #Short Slot Time
+        self.capabilities['fixed']['apsd'] = int(cap_bits[10]) #automatic power save delivery
+        self.capabilities['fixed']['radio_measurement'] = int(cap_bits[11])
+        self.capabilities['fixed']['dss_ofdm'] = int(cap_bits[12]) #Direct Spread Spectrum
+        self.capabilities['fixed']['del_back'] = int(cap_bits[13]) #Delayed Block Acknowledgement
+        self.capabilities['fixed']['imm_back'] = int(cap_bits[14]) #Immediate Block Acknowledgement
+        return 12
+
+    def __str__(self):
+        frame = "%s from %s (tstamp: %d, interval: %d)"
+        frame = frame % (self.name, self.bssid, self.timestamp, self.interval)
+        return frame
+
 class Control(Wifi):
 
     """Control Frames (type: 1)"""
@@ -559,6 +667,9 @@ class Control(Wifi):
         :frame: ctypes.Structure
         """
         Wifi.__init__(self, frame)
+
+    def __str__(self):
+        return self.name
 
 class RTS(Control):
 
@@ -573,6 +684,11 @@ class RTS(Control):
         self.ra = Wifi.get_mac_addr(ra_mac)
         self.ta = Wifi.get_mac_addr(ta_mac)
 
+    def __str__(self):
+        frame = '%s from %s to %s (duration: %d us)'
+        frame = frame % (self.name, self.ta, self.ra, self.duration)
+        return frame
+
 class CTS(Control):
 
     """Clear to Send Frame (type: 1, subtype: 2)"""
@@ -584,6 +700,11 @@ class CTS(Control):
         Control.__init__(self, frame)
         ra_mac = struct.unpack('!6s', self._packet[4:10])[0]
         self.ra = Wifi.get_mac_addr(ra_mac)
+
+    def __str__(self):
+        frame = '%s to %s (duration: %d us)'
+        frame = frame % (self.name, self.ra, self.duration)
+        return frame
 
 class BACK(Control):
 
@@ -636,3 +757,8 @@ class BACK(Control):
               seq = (self.ssc_sequence + idx) % 4096
               acked_seqs.append(seq)
         return acked_seqs
+    
+    def __str__(self):
+        frame = '%s from %s to %s'
+        frame = frame % (self.name, self.ta, self.ra)
+        return frame
