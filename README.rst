@@ -89,7 +89,7 @@ Automatically decoding layers
     [+] loaded 3 packets
     [+] finished loading savefile.
     >>> eth_frame = ethernet.Ethernet(capfile.packets[0].raw())
-    >>> wifi_frame = WIFI(capfile.packets[1].raw())
+    >>> wifi_frame = wifi.WIFI(capfile.packets[1].raw())
     >>> print eth_frame
     ethernet from 00:11:22:33:44:55 to ff:ee:dd:cc:bb:aa type IPv4
     >>> print wifi_frame
