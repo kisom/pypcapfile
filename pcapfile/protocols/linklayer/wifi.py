@@ -402,7 +402,6 @@ class Wifi(ctypes.Structure):
         qos_idx, seq_idx = 0, 0
         ta_mac, ra_mac, sa_mac, da_mac, bssid =\
             None, None, None, None, None
-        print "blah"
 
         if self.to_ds == 1 and self.from_ds == 1:
             (ra_mac, ta_mac, da_mac) =\
@@ -421,7 +420,6 @@ class Wifi(ctypes.Structure):
             qos_idx = 22
             seq_idx = qos_idx
         elif self.to_ds == 0 and self.from_ds == 0:
-            print "here"
             (ra_mac, ta_mac, bssid) =\
                 struct.unpack('!6s6s6s', self._packet[4:22])
             seq_idx = 22
