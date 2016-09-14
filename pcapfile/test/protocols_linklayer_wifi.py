@@ -177,7 +177,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(frame.subtype, 9, 'invalid subtype')
         self.assertEqual(frame.ta, b'88:41:fc:2a:01:aa',
                 'invalid transmitter address')
-        self.assertEqual(frame.ta, b'88:41:fc:2a:01:a6',
+        self.assertEqual(frame.ra, b'88:41:fc:2a:01:a6',
                 'invalid receiver address')
         self.assertEqual(frame.acked_seqs, list(xrange(713, 754)),
                 'invalid sequence numbers in acknowledgement') 
@@ -195,7 +195,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(frame.subtype, 8, 'invalid subtype')
         self.assertEqual(frame.ta, b'88:41:fc:2a:01:aa',
                 'invalid transmitter address')
-        self.assertEqual(frame.ta, b'ff:ff:ff:ff:ff:ff',
+        self.assertEqual(frame.ra, b'ff:ff:ff:ff:ff:ff',
                 'invalid receiver address')
         self.assertEqual(frame.timestamp, 514355210,
                 'invalid beacon timestamp')
@@ -220,10 +220,10 @@ class TestCase(unittest.TestCase):
         self.assertEqual(frame.amsdupresent, 1, 'invalid a-msdu information')
         self.assertEqual(frame.ta, b'88:41:fc:2a:01:aa',
                 'invalid transmitter address')
-        self.assertEqual(frame.ta, b'88:41:fc:2a:01:a6',
+        self.assertEqual(frame.ra, b'88:41:fc:2a:01:a6',
                 'invalid receiver address')
         self.assertEqual(frame.seq_num, 37, 'invalid sequence number')
-        self.assertEqual(len(self.payload), 7,
+        self.assertEqual(len(frame.payload), 7,
                 'invalid a-msdu aggregation formed')
 
     def test_data_non_amsdu_wds_packet(self):
@@ -249,8 +249,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual(frame.amsdupresent, 0, 'invalid a-msdu information')
         self.assertEqual(frame.ta, b'88:41:fc:7a:0f:d3',
                 'invalid transmitter address')
-        self.assertEqual(frame.ta, b'88:41:d8:2a:01:a6',
+        self.assertEqual(frame.ra, b'88:41:d8:2a:01:aa',
                 'invalid receiver address')
         self.assertEqual(frame.seq_num, 1859, 'invalid sequence number')
-        self.assertEqual(len(self.payload), 1,
+        self.assertEqual(len(frame.payload), 1,
                 'invalid a-msdu aggregation formed')
