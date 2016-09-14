@@ -62,7 +62,7 @@ You can take a look at the packets in ``capfile.packets``:
     >>> pkt.timestamp
     1343676707L
 
-| Right now there is very basic support for Ethernet frames and IPv4
+| Right now there is very basic support for Ethernet and Wi-Fi frames and IPv4
   packet
 | parsing.
 
@@ -79,6 +79,7 @@ Automatically decoding layers
 
     >>> from pcapfile import savefile
     >>> from pcapfile.protocols.linklayer import ethernet
+    >>> from pcapfile.protocols.linklayer import wifi
     >>> from pcapfile.protocols.network import ip
     >>> import binascii
     >>> testcap = open('samples/test.pcap', 'rb')
@@ -88,11 +89,17 @@ Automatically decoding layers
     [+] loaded 3 packets
     [+] finished loading savefile.
     >>> eth_frame = ethernet.Ethernet(capfile.packets[0].raw())
+    >>> wifi_frame = WIFI(capfile.packets[1].raw())
     >>> print eth_frame
     ethernet from 00:11:22:33:44:55 to ff:ee:dd:cc:bb:aa type IPv4
+    >>> print wifi_frame
+    QoS data (sa: 88:41:fc:3d:55:ef, ta: 88:41:fc:3d:55:f2, ra: 88:41:fc:3d:50:b2, da: 01:00:5e:7f:ff:fa)
     >>> ip_packet = ip.IP(binascii.unhexlify(eth_frame.payload))
     >>> print ip_packet
     ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
+    >>> ip_packet = ip.IP(wifi_frame.payload[0]['payload'])
+    ipv4 packet from 192.168.2.175 to 239.255.255.250 carrying 336 bytes
+    >>> print ip_packet
 
 and this example:
 
