@@ -72,12 +72,11 @@ class WiHelper:
         s_type = frame_control[0] >> 4
 
         if cat not in _CATEGORIES_.keys():
-            print "invalid category: {}".format(cat)
+            print("invalid category: %d" % (cat))
             return -1
 
         if s_type not in _SUBTYPES_[cat].keys():
-            print "invalid subtype {} in {} category".format(s_type,
-                    _CATEGORIES_[cat])
+            print("invalid subtype %d in %s category" % (s_type, _CATEGORIES_[cat]))
             return -1
 
         if cat == 0:
@@ -362,7 +361,7 @@ class Wifi(ctypes.Structure):
         attrs = vars(self)
         for key, val in attrs.items():
             if key[0] != '_':
-                print "{}: {}".format(key, val)
+                print("%s: %s" % (key, val))
 
     def print_rtap(self):
         """prints radiotap headers (radiotap object)"""
@@ -370,7 +369,7 @@ class Wifi(ctypes.Structure):
         attrs = vars(self.radiotap)
         for key, val in attrs.items():
             if key[0] != '_':
-                print "{}: {}".format(key, val)
+                print("%s: %s" % (key, val))
 
     @staticmethod
     def get_mac_addr(mac_addr):
