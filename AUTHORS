@@ -18,3 +18,5 @@
 - Cristian Klein (https://github.com/cristiklein)
         - Initial IP options support
         - TCP transport support
+- Kivanc Cakmak (https://github.com/kivanccakmak)
+        - added Wi-Fi support
