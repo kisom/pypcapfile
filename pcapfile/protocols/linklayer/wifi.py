@@ -357,7 +357,7 @@ class Wifi(ctypes.Structure):
 
     def print_packet(self):
         """prints packet headers (main object)"""
-        print "*** PACKET INFORMATION ***"
+        print("*** PACKET INFORMATION ***")
         attrs = vars(self)
         for key, val in attrs.items():
             if key[0] != '_':
@@ -365,7 +365,7 @@ class Wifi(ctypes.Structure):
 
     def print_rtap(self):
         """prints radiotap headers (radiotap object)"""
-        print "*** RADIOTAP INFORMATION ***"
+        print("*** RADIOTAP INFORMATION ***")
         attrs = vars(self.radiotap)
         for key, val in attrs.items():
             if key[0] != '_':
