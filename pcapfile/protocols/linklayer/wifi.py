@@ -167,7 +167,7 @@ class Radiotap(ctypes.Structure):
         :returns: int
             number of processed bytes
         """
-        self.vers = struct.unpack('B', self._rtap[idx])[0]
+        self.vers = struct.unpack('B', self._rtap[idx:idx+1])[0]
         return 1
 
     def strip_pad(self, idx):
@@ -176,7 +176,7 @@ class Radiotap(ctypes.Structure):
         :returns: int
             number of processed bytes
         """
-        self.pad = struct.unpack('B', self._rtap[idx])[0]
+        self.pad = struct.unpack('B', self._rtap[idx:idx+1])[0]
         return 1
 
     def strip_len(self, idx):
@@ -254,7 +254,7 @@ class Radiotap(ctypes.Structure):
         """
         self._raw['rate'] = self._rtap[idx]
         rate_unit = float(1) / 2 #Mbps
-        self.rate = rate_unit * struct.unpack('b', self._raw['rate'])[0] #Mbps
+        self.rate = rate_unit * struct.unpack('b', self._rtap[idx:idx+1])[0] #Mbps
 
     def strip_channel(self, idx):
         """strip radiotap.channel.freq(2 byte) and
@@ -564,16 +564,16 @@ class QosData(Data):
         """
         llc = {}
         snap = 170
-        llc_dsap = struct.unpack('B', self._packet[idx])[0]
+        llc_dsap = struct.unpack('B', self._packet[idx:idx+1])[0]
         llc['dsap.dsap'] = llc_dsap >> 1
         llc['dsap.ig'] = llc_dsap & 0b01
         idx += 1
-        llc_ssap = struct.unpack('B', self._packet[idx])[0]
+        llc_ssap = struct.unpack('B', self._packet[idx:idx+1])[0]
         llc['ssap.sap'] = llc_ssap >> 1
         llc['ssap.cr'] = llc_ssap & 0b01
         idx += 1
         if llc_dsap == snap and llc_ssap == snap:
-            llc_control = struct.unpack('B', self._packet[idx])[0]
+            llc_control = struct.unpack('B', self._packet[idx:idx+1])[0]
             llc['control.u_modifier_cmd'] = llc_control >> 2
             llc['control.ftype'] = llc_control & 0x03
             idx += 1
