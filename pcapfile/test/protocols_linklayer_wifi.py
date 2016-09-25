@@ -67,6 +67,38 @@ DATA_AMSDU_WDS_PACKET = [b'000026002b4820002a80a778000000000000a4154001e100',
                          b'c4cc40004006ef13c0a802cac0a802c91389d3e380ceb976',
                          b'b6141ba1801049883a9600000101080a00f47d890279f75c']
 
+#entire probe request packet
+PROBE_REQUEST = [b'00001a002f48000092706a4800000000000c3c144001df0000004008',
+                 b'3c008841fc1f99d28841fc5721128841fc57211280f200086f736d61',
+                 b'6e63616e01080c1218243048606cdd0b001ca8500102572112e03a2d',
+                 b'1aad0917ffffff00000000000000000000000000000000000000007f',
+                 b'080400000000000040bf0cb259820feaff0000eaff0000dd2f0050f2',
+                 b'04104a00011010490022007fc5100018313131313232323233333333',
+                 b'34343431303030303030613530000101dd090010180200001c0000dd',
+                 b'1e00904c33ad0917ffffff0000000000000000000000000000000000',
+                 b'000000dd070050f208001400']
+
+#entire probe response packet
+PROBE_RESPONSE = [b'00001a002f4800001f4d634800000000000c3c144001d3000000500',
+                  b'83c008086f281daa8c03e0f5ce558c03e0f5ce55820b91653d01804',
+                  b'000000640011110011536576656e4e6f6465732d3530472d3336010',
+                  b'88c129824b048606c07344742202401172801172c01173001173401',
+                  b'173801173c011740011764011e68011e6c011e70011e74011e84011',
+                  b'e88011e8c011e002001002302140030140100000fac040100000fac',
+                  b'040100000fac0280000b0500004a00002d1aef0917ffffff0000000',
+                  b'0000000000000000000000000000000003d16240d00000000000000',
+                  b'000000000000000000000000007f080000080000000040bf0cb2598',
+                  b'20feaff0000eaff0000c005012a000000c30402020202dd0b001ca8',
+                  b'500101f5ba76e02addb00050f204104a0001101044000102103b000',
+                  b'10310470010ac79c11cfad8dd17641ce15acd136f0a10210003536b',
+                  b'7910230005455231313010240007312e302e302e301042000e41543',
+                  b'133353132303330303030311054000800060050f204000110110009',
+                  b'536b7920512048756210080002200c103c0001021049000e00372a0',
+                  b'001200106ffffffffffff10580022007fc510001894c9f0c1646f4e',
+                  b'2465260def16ec2b38303030303537616530000101dd09001018020',
+                  b'0001c0000dd180050f2020101840003a4000027a4000042435e0062',
+                  b'322f0046057200010000']
+
 #entire beacon packet
 BEACON_PACKET = [b'00001a002f48000054446f7800000000000ca4154001e80000008000',
                  b'0000ffffffffffff8841fc2a01aa8841fc2a01aa101f0a70a81e0000',
@@ -95,11 +127,13 @@ RTS_PACKET = [b'00001a002f4800008334e27800000000000ca4154001df000000b400340',
 CTS_PACKET = [b'00001a002f480000c634e27800000000000ca4154001e7000000c400f80',
               b'a8841fc2a01a6']
 
-#entir block ack packet
+#entire block ack packet
 BLOCK_ACK_PACKET = [b'00001a002f480000b23fe278000000000030a415400',
                     b'1e8000000940000008841fc2a01a68841fc2a01aa05',
                     b'00902cffffffffff010000']
 
+PROBE_REQ_PACKET = binascii.unhexlify(b''.join(PROBE_REQUEST))
+PROBE_RESP_PACKET = binascii.unhexlify(b''.join(PROBE_RESPONSE))
 BEACON_PACKET = binascii.unhexlify(b''.join(BEACON_PACKET))
 RTS_PACKET = binascii.unhexlify(b''.join(RTS_PACKET))
 CTS_PACKET = binascii.unhexlify(b''.join(CTS_PACKET))
@@ -191,6 +225,64 @@ class TestCase(unittest.TestCase):
         self.assertEqual(frame.timestamp, 514355210,
                 'invalid beacon timestamp')
         self.assertEqual(frame.seq_num, 497, 'invalid sequence number')
+
+    def test_probe_req_packet(self):
+        """
+        Verify attributes of Probe Request instance.
+        """
+        frame = wifi.WIFI(PROBE_REQ_PACKET)
+        self.assertTrue(isinstance(frame, wifi.ProbeReq),
+                        'invalid Beacon frame!')
+        self.assertEqual(len(frame.tagged_params), 10,
+                'invalid number of tagged paramters')
+        vendor_ies = frame.get_vendor_ies()
+        self.assertEqual(len(vendor_ies), 5,
+                'invalid number of vendor ies')
+        ie_type = frame.get_vendor_ies('00-1C-A8', 80)
+        self.assertEqual(len(ie_type), 1,
+            'invalid number of ies for mac block 00-1C-A8')
+
+    def test_probe_resp_packet(self):
+        """
+        Verify attributes of Probe Response instance.
+        """
+        frame = wifi.WIFI(PROBE_RESP_PACKET)
+        self.assertTrue(isinstance(frame, wifi.ProbeResp),
+                'invalid Probe Response frame!')
+        self.assertEqual(frame.timestamp, 17596175126,
+                'invalid timestamp')
+        self.assertEqual(frame.fixed_capabils['ess'], 1,
+                'invalid ess flag')
+        self.assertEqual(frame.fixed_capabils['ibss'], 0,
+                'invalid ibss flag')
+        self.assertEqual(frame.fixed_capabils['privacy'], 1,
+                'invalid privacy capability flag')
+        self.assertEqual(frame.fixed_capabils['short_preamble'], 0,
+                'invalid short preamble flag')
+        self.assertEqual(frame.fixed_capabils['pbcc'], 0,
+                'invalid pbcc flag')
+        self.assertEqual(frame.fixed_capabils['chan_agility'], 0,
+                'invalid channel agility flag')
+        self.assertEqual(frame.fixed_capabils['spec_man'], 1,
+                'invalid spectrum management flag')
+        self.assertEqual(frame.fixed_capabils['short_slot'], 0,
+                'invalid short slot time flag')
+        self.assertEqual(frame.fixed_capabils['apsd'], 0,
+                'invalid automatic power save delivery flag')
+        self.assertEqual(frame.fixed_capabils['dss_ofdm'], 0,
+                'invalid dynamic spec spectrum / ofdm flag')
+        self.assertEqual(frame.fixed_capabils['del_back'], 0,
+                'invalid delayed block ack flag')
+        self.assertEqual(frame.fixed_capabils['imm_back'], 0,
+                'invalid immediate block ack flag')
+        self.assertEqual(len(frame.tagged_params), 18,
+                'invalid number of tagged parameters')
+        vendor_ies = frame.get_vendor_ies()
+        self.assertEqual(len(vendor_ies), 4,
+                'invalid number of vendor ies')
+        ie_type = frame.get_vendor_ies('00-10-18', 2)
+        self.assertEqual(len(ie_type), 1,
+                'invalid number of ies for mac block 00-10-18')
 
     def test_data_amsdu_wds_packet(self):
         """

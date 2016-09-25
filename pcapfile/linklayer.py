@@ -8,11 +8,13 @@ import imp
 import sys
 
 import pcapfile.protocols.linklayer.ethernet as ethernet
+import pcapfile.protocols.linklayer.wifi as wifi
 
 
 __LL_TYPES__ = [('LINKTYPE_NULL', 0, 'null', None),
                 ('LINKTYPE_ETHERNET', 1, 'ethernet',
                     ethernet.Ethernet),
+                ('LINKTYPE_IEEE802_11_RADIOTAP', 127, wifi.Wifi),
                 ('LINKTYPE_TOKEN_RING', 6, 'token ring', None),
                 ('LINKTYPE_ARCNET', 7, 'ARCnet', None),
                 ('LINKTYPE_SLIP', 8, 'SLIP', None)]
