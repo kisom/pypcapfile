@@ -8,10 +8,12 @@ import ctypes
 import struct
 import logging
 
+#wlan.fc.type
 _CATEGORIES_ = {0:'management', 1:'control', 2:'data'}
 
 _SUBTYPES_ = {}
 
+#wlan.fc.type_subtype
 _SUBTYPES_[0] = {0:'Association Request',
         1:'Association Response', 2:'Reassociation Request',
         3:'Reassociation Response', 4:'Probe Request',
@@ -30,6 +32,175 @@ _SUBTYPES_[2] = {0:'Data', 1:'Data + CF-ack', 2:'Data + CF-poll',
         11:'QoS data + CF-ack + CF-poll', 12:'QoS Null',
         13:'Reserved', 14:'Qos + CF-poll(no data)',
         15:'Qos + CF-ack(no data)'}
+
+#wlan_mgt.tag
+MNGMT_TAGS = {
+    0: "TAG_SSID",
+    1: "TAG_SUPP_RATES",
+    2: "TAG_FH_PARAMETER",
+    3: "TAG_DS_PARAMETER",
+    4: "TAG_CF_PARAMETER",
+    5: "TAG_TIM",
+    6: "TAG_IBSS_PARAMETER",
+    7: "TAG_COUNTRY_INFO",
+    8: "TAG_FH_HOPPING_PARAMETER",
+    9: "TAG_FH_HOPPING_TABLE",
+    10: "TAG_REQUEST",
+    11: "TAG_QBSS_LOAD",
+    12: "TAG_EDCA_PARAM_SET",
+    13: "TAG_TSPEC",
+    14: "TAG_TCLAS",
+    15: "TAG_SCHEDULE",
+    16: "TAG_CHALLENGE_TEXT",
+    32: "TAG_POWER_CONSTRAINT",
+    33: "TAG_POWER_CAPABILITY",
+    34: "TAG_TPC_REQUEST",
+    35: "TAG_TPC_REPORT",
+    36: "TAG_SUPPORTED_CHANNELS",
+    37: "TAG_CHANNEL_SWITCH_ANN",
+    38: "TAG_MEASURE_REQ",
+    39: "TAG_MEASURE_REP",
+    40: "TAG_QUIET",
+    41: "TAG_IBSS_DFS",
+    42: "TAG_ERP_INFO",
+    43: "TAG_TS_DELAY",
+    44: "TAG_TCLAS_PROCESS",
+    45: "TAG_HT_CAPABILITY",
+    46: "TAG_QOS_CAPABILITY",
+    47: "TAG_ERP_INFO_OLD",
+    48: "TAG_RSN_IE",
+    50: "TAG_EXT_SUPP_RATES",
+    51: "TAG_AP_CHANNEL_REPORT",
+    52: "TAG_NEIGHBOR_REPORT",
+    53: "TAG_RCPI",
+    54: "TAG_MOBILITY_DOMAIN",
+    55: "TAG_FAST_BSS_TRANSITION",
+    56: "TAG_TIMEOUT_INTERVAL",
+    57: "TAG_RIC_DATA",
+    58: "TAG_DSE_REG_LOCATION",
+    59: "TAG_SUPPORTED_OPERATING_CLASSES",
+    60: "TAG_EXTENDED_CHANNEL_SWITCH_ANNOUNCEMENT",
+    61: "TAG_HT_INFO",
+    62: "TAG_SECONDARY_CHANNEL_OFFSET",
+    63: "TAG_BSS_AVG_ACCESS_DELAY",
+    64: "TAG_ANTENNA",
+    65: "TAG_RSNI",
+    66: "TAG_MEASURE_PILOT_TRANS",
+    67: "TAG_BSS_AVB_ADM_CAPACITY",
+    68: "TAG_BSS_AC_ACCESS_DELAY",
+    69: "TAG_TIME_ADV",
+    70: "TAG_RM_ENABLED_CAPABILITY",
+    71: "TAG_MULTIPLE_BSSID",
+    72: "TAG_20_40_BSS_CO_EX",
+    73: "TAG_20_40_BSS_INTOL_CH_REP",
+    74: "TAG_OVERLAP_BSS_SCAN_PAR",
+    75: "TAG_RIC_DESCRIPTOR",
+    76: "TAG_MMIE",
+    78: "TAG_EVENT_REQUEST",
+    79: "TAG_EVENT_REPORT",
+    80: "TAG_DIAGNOSTIC_REQUEST",
+    81: "TAG_DIAGNOSTIC_REPORT",
+    82: "TAG_LOCATION_PARAMETERS",
+    83: "TAG_NO_BSSID_CAPABILITY",
+    84: "TAG_SSID_LIST",
+    85: "TAG_MULTIPLE_BSSID_INDEX",
+    86: "TAG_FMS_DESCRIPTOR",
+    87: "TAG_FMS_REQUEST",
+    88: "TAG_FMS_RESPONSE",
+    89: "TAG_QOS_TRAFFIC_CAPABILITY",
+    90: "TAG_BSS_MAX_IDLE_PERIOD",
+    91: "TAG_TFS_REQUEST",
+    92: "TAG_TFS_RESPONSE",
+    93: "TAG_WNM_SLEEP_MODE",
+    94: "TAG_TIM_BROADCAST_REQUEST",
+    95: "TAG_TIM_BROADCAST_RESPONSE",
+    96: "TAG_COLLOCATED_INTER_REPORT",
+    97: "TAG_CHANNEL_USAGE",
+    98: "TAG_TIME_ZONE",
+    99: "TAG_DMS_REQUEST",
+    100: "TAG_DMS_RESPONSE",
+    101: "TAG_LINK_IDENTIFIER",
+    102: "TAG_WAKEUP_SCHEDULE",
+    104: "TAG_CHANNEL_SWITCH_TIMING",
+    105: "TAG_PTI_CONTROL",
+    106: "TAG_PU_BUFFER_STATUS",
+    107: "TAG_INTERWORKING",
+    108: "TAG_ADVERTISEMENT_PROTOCOL",
+    109: "TAG_EXPIDITED_BANDWIDTH_REQ",
+    110: "TAG_QOS_MAP_SET",
+    111: "TAG_ROAMING_CONSORTIUM",
+    112: "TAG_EMERGENCY_ALERT_ID",
+    113: "TAG_MESH_CONFIGURATION",
+    114: "TAG_MESH_ID",
+    115: "TAG_MESH_LINK_METRIC_REPORT",
+    116: "TAG_CONGESTION_NOTIFICATION",
+    117: "TAG_MESH_PEERING_MGMT",
+    118: "TAG_MESH_CHANNEL_SWITCH",
+    119: "TAG_MESH_AWAKE_WINDOW",
+    120: "TAG_BEACON_TIMING",
+    121: "TAG_MCCAOP_SETUP_REQUEST",
+    122: "TAG_MCCAOP_SETUP_REPLY",
+    123: "TAG_MCCAOP_ADVERTISEMENT",
+    124: "TAG_MCCAOP_TEARDOWN",
+    125: "TAG_GANN",
+    126: "TAG_RANN",
+    127: "TAG_EXTENDED_CAPABILITIES",
+    128: "TAG_AGERE_PROPRIETARY",
+    130: "TAG_MESH_PREQ",
+    131: "TAG_MESH_PREP",
+    132: "TAG_MESH_PERR",
+    133: "TAG_CISCO_CCX1_CKIP",
+    136: "TAG_CISCO_CCX2",
+    137: "TAG_PXU",
+    138: "TAG_PXUC",
+    139: "TAG_AUTH_MESH_PEERING_EXCH",
+    140: "TAG_MIC",
+    141: "TAG_DESTINATION_URI",
+    142: "TAG_U_APSD_COEX",
+    143: "TAG_WAKEUP_SCHEDULE_AD",
+    144: "TAG_EXTENDED_SCHEDULE",
+    145: "TAG_STA_AVAILABILITY",
+    146: "TAG_DMG_TSPEC",
+    147: "TAG_NEXT_DMG_ATI",
+    148: "TAG_DMG_CAPABILITIES",
+    149: "TAG_CISCO_CCX3",
+    150: "TAG_CISCO_VENDOR_SPECIFIC",
+    151: "TAG_DMG_OPERATION",
+    152: "TAG_DMG_BSS_PRAMTER_CHANGE",
+    153: "TAG_DMG_BEAM_REFINEMENT",
+    154: "TAG_CHANNEL_MEASURMENT_FB",
+    157: "TAG_AWAKE_WINDOW",
+    158: "TAG_MULTI_BAND",
+    159: "TAG_ADDBA_EXT",
+    160: "TAG_NEXTPCP_LIST",
+    161: "TAG_PCP_HANDOVER",
+    162: "TAG_DMG_LINK_MARGIN",
+    163: "TAG_SWITCHING_STREAM",
+    164: "TAG_SESSION_TRANSMISSION",
+    165: "TAG_DYN_TONE_PAIR_REP",
+    166: "TAG_CLUSTER_REP",
+    167: "TAG_RELAY_CAPABILITIES",
+    168: "TAG_RELAY_TRANSFER_PARAM",
+    169: "TAG_BEAMLINK_MAINTAINCE",
+    170: "TAG_MULTIPLE_MAC_SUBLAYERS",
+    171: "TAG_U_PID",
+    172: "TAG_DMG_LINK_ADAPTION_ACK",
+    173: "TAG_SYMBOL_PROPRIETARY",
+    174: "TAG_MCCAOP_ADVERTISEMENT_OV",
+    175: "TAG_QUIET_PERIOD_REQ",
+    177: "TAG_QUIET_PERIOD_RES",
+    182: "TAG_ECPAC_POLICY",
+    183: "TAG_CLUSTER_TIME_OFFSET",
+    190: "TAG_ANTENNA_SECTOR_ID",
+    191: "TAG_VHT_CAPABILITY",
+    192: "TAG_VHT_OPERATION",
+    193: "TAG_EXT_BSS_LOAD",
+    194: "TAG_WIDE_BW_CHANNEL_SWITCH",
+    195: "TAG_VHT_TX_PWR_ENVELOPE",
+    196: "TAG_CHANNEL_SWITCH_WRAPPER",
+    199: "TAG_OPERATING_MODE_NOTIFICATION",
+    221: "TAG_VENDOR_SPECIFIC_IE"
+}
 
 def WIFI(frame):
     """calls wifi packet discriminator and constructor.
@@ -80,7 +251,11 @@ class WiHelper:
             return -1
 
         if cat == 0:
-            if s_type == 8:
+            if s_type == 4:
+                return ProbeReq(frame)
+            elif s_type == 5:
+                return ProbeResp(frame)
+            elif s_type == 8:
                 return Beacon(frame)
             else:
                 return Management(frame)
@@ -338,7 +513,7 @@ class Wifi(ctypes.Structure):
         self.order = int(self.flag_bits[7])
 
         self.duration = struct.unpack('H', self._packet[2:4])[0] # us
-        
+
         self.name = None
         if self.category == 0:
             if self.subtype in _SUBTYPES_[0].keys():
@@ -423,7 +598,7 @@ class Wifi(ctypes.Structure):
                 struct.unpack('!6s6s6s', self._packet[4:22])
             seq_idx = 22
             qos_idx = None
-        
+
         if ta_mac != None:
             self.ta = Wifi.get_mac_addr(ta_mac)
         if ra_mac != None:
@@ -599,11 +774,263 @@ class Management(Wifi):
         :subtype: int
         """
         Wifi.__init__(self, frame)
+        self.tagged_params = None
+        self._raw_tagged_params = None
+        self.timestamp = None
+        self.interval = None
+        self.fixed_capabils = None
 
     def __str__(self):
         return self.name
 
+    @staticmethod
+    def parse_tagged_params(raw_tagged_params):
+        """strip tagged information elements wlan_mgt.tag
+        which has generic type-length-value structure
+        [type, length, value]
+        type(1 byte), length(1 byte), value(varies)
+        [wlan_mgt.tag.number, wlan_mgt.tag.length, payload]
+        structured fields.
+        :returns: dict[]
+            list of tagged params
+        :returns: int
+            0 in succ, 1 for
+        """
+        idx = 0
+        tagged_params = []
+        while idx < len(raw_tagged_params):
+            tag_num, tag_len = struct.unpack('BB', raw_tagged_params[idx:idx+2])
+            idx += 2
+            if len(raw_tagged_params) >= idx + tag_len:
+                param = {}
+                param['number'], param['length'] = tag_num, tag_len
+                payload = raw_tagged_params[idx:idx+tag_len]
+                if tag_num in MNGMT_TAGS:
+                    param['name'] = MNGMT_TAGS[tag_num]
+                    if MNGMT_TAGS[tag_num] == 'TAG_VENDOR_SPECIFIC_IE':
+                        param['payload'] = Management.parse_vendor_ie(payload)
+                    else:
+                        param['payload'] = payload
+                else:
+                    param['name'] = None
+                tagged_params.append(param)
+                idx += tag_len
+            else:
+                logging.warn('out tag length header points out of boundary')
+                log_msg = 'index: {p_idx}, pack_len: {p_len}'
+                log_msg = log_msg.format(p_idx=idx+tag_len,
+                        p_len=len(raw_tagged_params))
+                logging.warn(log_msg)
+                return 1, tagged_params
+        return 0, tagged_params
+
+    @staticmethod
+    def get_fixed_capabils(payload):
+        """
+        strip(2 byte) wlan_mgt.fixed.capabilities
+        :payload: ctypes.structure
+            2 byte
+        :return: dict
+            None in error
+        """
+        if len(payload) != 2:
+            return None
+        capabils = {}
+        fix_cap = struct.unpack('H', payload)[0]
+        cap_bits = format(fix_cap, '016b')[::-1]
+        capabils['ess'] = int(cap_bits[0]) #Extended Service Set
+        capabils['ibss'] = int(cap_bits[1]) #Independent Basic Service Set
+        capabils['privacy'] = int(cap_bits[4]) #Privacy
+        capabils['short_preamble'] = int(cap_bits[5]) #Short Preamble
+        capabils['pbcc'] = int(cap_bits[6]) #Packet Binary Convolutional Code
+        capabils['chan_agility'] = int(cap_bits[7]) #Channel Agility
+        capabils['spec_man'] = int(cap_bits[8]) #Spectrum Management
+        capabils['short_slot'] = int(cap_bits[10]) #Short Slot Time
+        capabils['apsd'] = int(cap_bits[11]) #automatic power save delivery
+        capabils['radio_measurement'] = int(cap_bits[12])
+        capabils['dss_ofdm'] = int(cap_bits[13]) #Direct Spread Spectrum
+        capabils['del_back'] = int(cap_bits[14]) #Delayed Block Acknowledgement
+        capabils['imm_back'] = int(cap_bits[15]) #Immediate Block Acknowledgement
+        return capabils
+
+    @staticmethod
+    def parse_vendor_ie(payload):
+        """parse vendor specific information element
+        oui -> organizationally unique identifier
+        first 3 bytes of mac addresses
+        see:https://www.wireshark.org/tools/oui-lookup.html
+        strip wlan_mgt.tag.oui(3 bytes),
+        wlan_mgt.tag.vendor.oui.type(1 byte)
+        wlan_mgt.tag.vendor.data (varies)
+        :payload: ctypes.structure
+        :return: dict
+            {'oui':00-11-22, 'oui_type':1, 'oui_data':ctypes.structure}
+        """
+        output = {}
+        oui = struct.unpack('BBB', payload[0:3])
+        oui = b'-'.join([('%02x' % o).encode('ascii') for o in oui])
+        oui_type = struct.unpack('B', payload[3])[0]
+        oui_data = payload[4:]
+        output['oui'] = oui.upper()
+        output['oui_type'] = oui_type
+        output['oui_data'] = oui_data
+        return output
+
+    @staticmethod
+    def get_timestamp(payload):
+        """strip wlan_mgt.fixed.timestamp(8 bytes)
+        :payload: ctypes.structure
+        :return: int
+            None on error
+        """
+        if len(payload) != 8:
+            return None
+        timestamp = struct.unpack('Q', payload)[0]
+        return timestamp
+
+    @staticmethod
+    def get_interval(payload):
+        """strip wlan_mgt.fixed.beacoN(2 bytes)
+        beacon interval
+        :payload: ctypes.structure
+        :return: int
+            None on error
+        """
+        if len(payload) != 2:
+            return None
+        interval = struct.unpack('H', payload)[0]
+        return interval
+
+    @staticmethod
+    def strip_fixed_params(payload):
+        """strip(12 byte) wlan_mgt.fixed.all
+        :payload: ctypes.structure
+        :return: int
+            timestamp
+        :return: int
+            beacon interval
+        :return: dict
+            capabilities
+        """
+        if len(payload) != 12:
+            return None, None, None
+        idx = 0
+        timestamp = Management.get_timestamp(payload[idx:idx+8])
+        idx += 8
+        interval = Management.get_interval(payload[idx:idx+2])
+        idx += 2
+        capabils = Management.get_fixed_capabils(payload[idx:idx+2])
+        return timestamp, interval, capabils
+
+    @staticmethod
+    def is_valid_mac_oui(mac_block):
+        """checks whether mac block is in format of
+        00-11-22 or 00:11:22.
+        :return: int
+        """
+        if len(mac_block) != 8:
+            return 0
+        if ':' in mac_block:
+            if len(mac_block.split(':')) != 3:
+                return 0
+        elif '-' in mac_block:
+            if len(mac_block.split('-')) != 3:
+                return 0
+        return 1
+
+    def get_vendor_ies(self, mac_block=None, oui_type=None):
+        """
+        :mac_block: str
+            first 3 bytes of mac addresses in format of
+            00-11-22 or 00:11:22 or 001122
+        :oui_type: int
+            vendors ie type
+        :returns: int
+            is valid mac_block  format
+            -1 is unknown
+        :returns: dict[]
+            list of oui information elements
+            -1 on error (invalid v
+        """
+        vendor_ies = []
+        if mac_block != None:
+            if Management.is_valid_mac_oui(mac_block):
+                mac_block = mac_block.upper()
+                if ':' in mac_block:
+                    mac_block.replace(':', '-')
+            else:
+                print("invalid oui macblock")
+                return None
+
+        for elem in self.tagged_params:
+            tag_num = elem['number']
+            if MNGMT_TAGS[tag_num] == 'TAG_VENDOR_SPECIFIC_IE':
+                if mac_block == None:
+                    vendor_ies.append(elem)
+                elif elem['payload']['oui'] == mac_block:
+                    if oui_type == None:
+                        vendor_ies.append(elem)
+                    elif elem['payload']['oui_type'] == oui_type:
+                        vendor_ies.append(elem)
+        return vendor_ies
+
+
+class ProbeResp(Management):
+
+    """Probe Response (type: 0, subtype: 5)"""
+
+    def __init__(self, frame):
+        """
+        """
+        Management.__init__(self, frame)
+        idx = 0
+        seq_idx, qos_idx = self.strip_mac_addrs(self.to_ds, self.from_ds)
+        idx = seq_idx
+        self.strip_seq_cntrl(idx)
+        idx += 2
+        payload = self._packet[idx:idx+12]
+        timestamp, interval, capabils = self.strip_fixed_params(payload)
+        if all([timestamp, interval, capabils]):
+            self.timestamp, self.interval, self.fixed_capabils =\
+                    timestamp, interval, capabils
+            idx += 12
+        else:
+            logging.warn("failed to parse fixed parameters")
+            return
+        if idx < len(self._packet):
+            self._raw_tagged_params = self._packet[idx:]
+            is_out_bound, tagged_params =\
+                self.parse_tagged_params(self._raw_tagged_params)
+            if len(tagged_params):
+                self.tagged_params = tagged_params
+            if is_out_bound:
+                logging.warn("tag_len header not matched with raw byte counts")
+
+class ProbeReq(Management):
+
+    """Probe Request (type: 0, subtype:4)"""
+
+    def __init__(self, frame):
+        """
+        """
+        Management.__init__(self, frame)
+        idx = 0
+        seq_idx, qos_idx = self.strip_mac_addrs(self.to_ds, self.from_ds)
+        idx = seq_idx
+        self.strip_seq_cntrl(idx)
+        idx += 2
+        if idx < len(self._packet):
+            self._raw_tagged_params = self._packet[idx:]
+            is_out_bound, tagged_params =\
+                self.parse_tagged_params(self._raw_tagged_params)
+            if len(tagged_params):
+                self.tagged_params = tagged_params
+            if is_out_bound:
+                logging.warn("tag_len header not matched with raw byte counts")
+
 class Beacon(Management):
+
+    """Beacon (type: 0, subtype: 0)"""
 
     def __init__(self, frame):
         """Constructor method.
@@ -611,44 +1038,27 @@ class Beacon(Management):
         """
         Management.__init__(self, frame)
         idx = 0
-        seq_idx, qos_idx  = self.strip_mac_addrs(self.to_ds, self.from_ds)
+        seq_idx, qos_idx = self.strip_mac_addrs(self.to_ds, self.from_ds)
         idx = seq_idx
         self.strip_seq_cntrl(idx)
         idx += 2
-        self.capabilities = {}
-        self.capabilities['fixed'] = {}
-        self.capabilities['vht'] = {}
-        self.capabilities['ht'] = {}
-        idx += self.strip_fixed_params(idx)
-        self._raw_tagged_params = self._packet[idx:]
-
-    def strip_fixed_params(self, idx):
-        """strip(12 byte) wlan_mgt.fixed.all
-        :idx: int
-        :return: int
-            number of processed bytes
-        """
-        self._raw_timestamp = self._packet[idx:idx+8]
-        self.timestamp = struct.unpack('Q', self._packet[idx:idx+8])[0]
-        idx += 8
-        self.interval = struct.unpack('H', self._packet[idx:idx+2])[0]
-        idx += 2
-        fix_cap = struct.unpack('H', self._packet[idx:idx+2])[0]
-        cap_bits = format(fix_cap, '016b')[::-1]
-        self.capabilities['fixed']['ess'] = int(cap_bits[0]) #Extended Service Set
-        self.capabilities['fixed']['ibss'] = int(cap_bits[1]) #Independent Basic Service Set
-        self.capabilities['fixed']['privacy'] = int(cap_bits[4]) #Privacy
-        self.capabilities['fixed']['short_preamble'] = int(cap_bits[5]) #Short Preamble
-        self.capabilities['fixed']['pbcc'] = int(cap_bits[6]) #Packet Binary Convolutional Code
-        self.capabilities['fixed']['chan_agility'] = int(cap_bits[7]) #Channel Agility
-        self.capabilities['fixed']['spec_man'] = int(cap_bits[8]) #Spectrum Management
-        self.capabilities['fixed']['short_slot'] = int(cap_bits[9]) #Short Slot Time
-        self.capabilities['fixed']['apsd'] = int(cap_bits[10]) #automatic power save delivery
-        self.capabilities['fixed']['radio_measurement'] = int(cap_bits[11])
-        self.capabilities['fixed']['dss_ofdm'] = int(cap_bits[12]) #Direct Spread Spectrum
-        self.capabilities['fixed']['del_back'] = int(cap_bits[13]) #Delayed Block Acknowledgement
-        self.capabilities['fixed']['imm_back'] = int(cap_bits[14]) #Immediate Block Acknowledgement
-        return 12
+        payload = self._packet[idx:idx+12]
+        timestamp, interval, capabils = self.strip_fixed_params(payload)
+        if all([timestamp, interval, capabils]):
+            self.timestamp, self.interval, self.fixed_capabils =\
+                    timestamp, interval, capabils
+            idx += 12
+        else:
+            logging.warn("failed to parse fixed parameters")
+            return
+        if idx < len(self._packet):
+            self._raw_tagged_params = self._packet[idx:]
+            is_out_bound, tagged_params =\
+                self.parse_tagged_params(self._raw_tagged_params)
+            if len(tagged_params):
+                self.tagged_params = tagged_params
+            if is_out_bound:
+                logging.warn("tag_len header not matched with raw byte counts")
 
     def __str__(self):
         frame = "%s from %s (tstamp: %d, interval: %d)"
