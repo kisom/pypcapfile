@@ -20,3 +20,6 @@
         - TCP transport support
 - Kivanc Cakmak (https://github.com/kivanccakmak)
         - added Wi-Fi support
+- Shea Lutton (https://github.com/shealutton)
+	- added length of pcap file
+	- added documentation to iterate over all packets
