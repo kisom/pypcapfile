@@ -133,6 +133,12 @@ and lastly:
 
 The interface is still a bit messy.
 
+Run Unit Tests
+--------------
+* ``cd /path/pypcapfile``
+* ``cp pcapfile/test/__main__.py .``
+* ``python __main__.py``
+
 Future planned improvements
 ---------------------------
 
