@@ -160,11 +160,12 @@ class TestCase(unittest.TestCase):
         frame = wifi.WIFI(RTS_PACKET)
         self.assertTrue(isinstance(frame, wifi.RTS),
                         'invalid RTS frame!')
-        self.assertEqual(frame.radiotap.chan_freq, 5540,
+        self.assertEqual(frame.radiotap.chan.freq, 5540,
                 'invalid channel frequency in radiotap headers')
         self.assertEqual(frame.radiotap.mactime, 2028090499,
                 'invalid radiotap mactime')
-        self.assertEqual(frame.radiotap.rate, 6.0, 'invalid rate')
+        self.assertEqual(frame.radiotap.rate, 6.0,
+                'invalid rate')
         self.assertEqual(frame.ta, b'88:41:fc:2a:01:a6',
                 'invalid transmitter address')
         self.assertEqual(frame.ra, b'88:41:fc:2a:01:aa',
@@ -181,9 +182,10 @@ class TestCase(unittest.TestCase):
                         'invalid CTS frame!')
         self.assertEqual(frame.radiotap.mactime, 2028090566,
                 'invalid radiotap mactime')
-        self.assertEqual(frame.radiotap.chan_freq, 5540,
+        self.assertEqual(frame.radiotap.chan.freq, 5540,
                 'invalid channel frequency in radiotap headers')
-        self.assertEqual(frame.radiotap.rate, 6.0, 'invalid rate')
+        self.assertEqual(frame.radiotap.rate, 6.0,
+                'invalid rate')
         self.assertEqual(frame.ra, b'88:41:fc:2a:01:a6',
                 'invalid receiver address')
         self.assertEqual(frame.duration, 2808,
@@ -198,7 +200,7 @@ class TestCase(unittest.TestCase):
                         'invalid BLOCK ACK frame!')
         self.assertEqual(frame.radiotap.mactime, 2028093362,
                 'invalid radiotap mactime')
-        self.assertEqual(frame.radiotap.chan_freq, 5540,
+        self.assertEqual(frame.radiotap.chan.freq, 5540,
                 'invalid channel frequency in radiotap headers')
         self.assertEqual(frame.ta, b'88:41:fc:2a:01:aa',
                 'invalid transmitter address')
@@ -216,7 +218,7 @@ class TestCase(unittest.TestCase):
                         'invalid Beacon frame!')
         self.assertEqual(frame.radiotap.mactime, 2020557908,
                 'invalid radiotap mactime')
-        self.assertEqual(frame.radiotap.chan_freq, 5540,
+        self.assertEqual(frame.radiotap.chan.freq, 5540,
                 'invalid channel frequency in radiotap headers')
         self.assertEqual(frame.ta, b'88:41:fc:2a:01:aa',
                 'invalid transmitter address')
@@ -224,7 +226,8 @@ class TestCase(unittest.TestCase):
                 'invalid receiver address')
         self.assertEqual(frame.timestamp, 514355210,
                 'invalid beacon timestamp')
-        self.assertEqual(frame.seq_num, 497, 'invalid sequence number')
+        self.assertEqual(frame.seq_num, 497,
+                'invalid sequence number')
 
     def test_probe_req_packet(self):
         """
@@ -251,29 +254,29 @@ class TestCase(unittest.TestCase):
                 'invalid Probe Response frame!')
         self.assertEqual(frame.timestamp, 17596175126,
                 'invalid timestamp')
-        self.assertEqual(frame.fixed_capabils['ess'], 1,
+        self.assertEqual(frame.ess, 1,
                 'invalid ess flag')
-        self.assertEqual(frame.fixed_capabils['ibss'], 0,
+        self.assertEqual(frame.ibss, 0,
                 'invalid ibss flag')
-        self.assertEqual(frame.fixed_capabils['privacy'], 1,
+        self.assertEqual(frame.priv, 1,
                 'invalid privacy capability flag')
-        self.assertEqual(frame.fixed_capabils['short_preamble'], 0,
+        self.assertEqual(frame.short_preamble, 0,
                 'invalid short preamble flag')
-        self.assertEqual(frame.fixed_capabils['pbcc'], 0,
+        self.assertEqual(frame.pbcc, 0,
                 'invalid pbcc flag')
-        self.assertEqual(frame.fixed_capabils['chan_agility'], 0,
+        self.assertEqual(frame.chan_agility, 0,
                 'invalid channel agility flag')
-        self.assertEqual(frame.fixed_capabils['spec_man'], 1,
+        self.assertEqual(frame.spec_man, 1,
                 'invalid spectrum management flag')
-        self.assertEqual(frame.fixed_capabils['short_slot'], 0,
+        self.assertEqual(frame.short_slot, 0,
                 'invalid short slot time flag')
-        self.assertEqual(frame.fixed_capabils['apsd'], 0,
+        self.assertEqual(frame.apsd, 0,
                 'invalid automatic power save delivery flag')
-        self.assertEqual(frame.fixed_capabils['dss_ofdm'], 0,
+        self.assertEqual(frame.dss_ofdm, 0,
                 'invalid dynamic spec spectrum / ofdm flag')
-        self.assertEqual(frame.fixed_capabils['del_back'], 0,
+        self.assertEqual(frame.del_back, 0,
                 'invalid delayed block ack flag')
-        self.assertEqual(frame.fixed_capabils['imm_back'], 0,
+        self.assertEqual(frame.imm_back, 0,
                 'invalid immediate block ack flag')
         self.assertEqual(len(frame.tagged_params), 18,
                 'invalid number of tagged parameters')
@@ -294,18 +297,20 @@ class TestCase(unittest.TestCase):
                         'invalid QosData frame!')
         self.assertEqual(frame.radiotap.mactime, 2024243242,
                 'invalid radiotap mactime')
-        self.assertEqual(frame.radiotap.chan_freq, 5540,
+        self.assertEqual(frame.radiotap.chan.freq, 5540,
                 'invalid channel frequency in radiotap headers')
         self.assertEqual(frame.from_ds, 1,
                 'invalid flag value in frame control')
         self.assertEqual(frame.to_ds, 1,
                 'invalid flag value in frame control')
-        self.assertEqual(frame.amsdupresent, 1, 'invalid a-msdu information')
+        self.assertEqual(frame.amsdupresent, 1,
+                'invalid a-msdu information')
         self.assertEqual(frame.ta, b'88:41:fc:2a:01:aa',
                 'invalid transmitter address')
         self.assertEqual(frame.ra, b'88:41:fc:2a:01:a6',
                 'invalid receiver address')
-        self.assertEqual(frame.seq_num, 37, 'invalid sequence number')
+        self.assertEqual(frame.seq_num, 37,
+                'invalid sequence number')
         self.assertEqual(len(frame.payload), 7,
                 'invalid a-msdu aggregation formed')
 
@@ -319,17 +324,19 @@ class TestCase(unittest.TestCase):
                         'invalid QosData frame!')
         self.assertEqual(frame.radiotap.mactime, 2045142051,
                 'invalid radiotap mactime')
-        self.assertEqual(frame.radiotap.chan_freq, 5540,
+        self.assertEqual(frame.radiotap.chan.freq, 5540,
                 'invalid channel frequency in radiotap headers')
         self.assertEqual(frame.from_ds, 1,
                 'invalid flag value in frame control')
         self.assertEqual(frame.to_ds, 1,
                 'invalid flag value in frame control')
-        self.assertEqual(frame.amsdupresent, 0, 'invalid a-msdu information')
+        self.assertEqual(frame.amsdupresent, 0,
+                'invalid a-msdu information')
         self.assertEqual(frame.ta, b'88:41:fc:7a:0f:d3',
                 'invalid transmitter address')
         self.assertEqual(frame.ra, b'88:41:d8:2a:01:aa',
                 'invalid receiver address')
-        self.assertEqual(frame.seq_num, 1859, 'invalid sequence number')
+        self.assertEqual(frame.seq_num, 1859,
+                'invalid sequence number')
         self.assertEqual(len(frame.payload), 1,
                 'invalid a-msdu aggregation formed')
