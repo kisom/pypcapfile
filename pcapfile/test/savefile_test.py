@@ -106,6 +106,8 @@ class TestCase(unittest.TestCase):
         self.assertTrue(self.capfile.valid, 'invalid capture file')
         self.assertEqual(len(self.capfile.packets), 23,
                          'wrong number of packets!')
+        self.assertEqual(self.capfile.__length__(), 23,
+                         '__length__ not reporting correct number of packets')
 
     def test_lazy_import(self):
         """

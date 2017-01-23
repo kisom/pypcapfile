@@ -80,6 +80,9 @@ class pcap_savefile(object):
                          linklayer.lookup(self.header.ll_type),
                          len(self.packets))
 
+    def __length__(self):
+        return len(self.packets)
+
 
 def _load_savefile_header(file_h):
     """

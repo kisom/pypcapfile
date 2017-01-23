@@ -117,6 +117,19 @@ and this example:
     >>> print capfile.packets[0].packet.payload
     <hex string snipped>
 
+and this example to pull the raw payload from every packet in a pcap file:
+
+.. code:: python
+
+    >>> from pcapfile import savefile
+    >>> import binascii
+
+    >>> capfile = savefile.load_savefile(testcap)
+    >>> file_length = capfile.__length__()
+    >>> for packet in range(0, file_length):
+    >>>     pkt = capfile.packets[packet]
+    >>>     data = binascii.b2a_qp(pkt.raw())  # Do something here
+
 and lastly:
 
 .. code:: python
