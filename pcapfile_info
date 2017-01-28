@@ -22,4 +22,8 @@ def pcap_info(pcap_file):
 
 
 if __name__ == '__main__':
-    pcap_info(sys.argv[1])
+    try:
+        pcap_info(sys.argv[1])
+    except Exception:
+        print('Invalid or missing pcap file')
+        sys.exit(1)
