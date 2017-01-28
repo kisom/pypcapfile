@@ -12,7 +12,8 @@ def pcap_info(pcap_file):
     Main function to read and display information about a libpcap
     savefile.
     """
-    capfile = savefile.load_savefile(pcap_file, verbose=False)
+    with open(pcap_file, 'rb') as f:
+        capfile = savefile.load_savefile(f, verbose=False)
 
     if capfile.valid:
         print(capfile)
