@@ -45,7 +45,7 @@ The core functionality is implemented in ``pcapfile.savefile``:
     [+] found valid header
     [+] loaded 11 packets
     [+] finished loading savefile.
-    >>> print capfile
+    >>> print(capfile)
     little-endian capture file version 2.4
     microsecond time resolution
     snapshot length: 65535
@@ -90,15 +90,15 @@ Automatically decoding layers
     [+] finished loading savefile.
     >>> eth_frame = ethernet.Ethernet(capfile.packets[0].raw())
     >>> wifi_frame = wifi.WIFI(capfile.packets[1].raw())
-    >>> print eth_frame
+    >>> print(eth_frame)
     ethernet from 00:11:22:33:44:55 to ff:ee:dd:cc:bb:aa type IPv4
-    >>> print wifi_frame
+    >>> print(wifi_frame)
     QoS data (sa: None, ta: 00:11:22:33:44:55, ra: ff:ee:dd:cc:bb:aa, da: None)
     >>> ip_packet = ip.IP(binascii.unhexlify(eth_frame.payload))
-    >>> print ip_packet
+    >>> print(ip_packet)
     ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
     >>> ip_packet = ip.IP(wifi_frame.payload[0]['payload']) #if wifi_frame.category == 2 and wifi_frame.subtype == 8
-    >>> print ip_packet
+    >>> print(ip_packet)
     ipv4 packet from 192.168.2.175 to 239.255.255.250 carrying 336 bytes
 
 and this example:
@@ -112,9 +112,9 @@ and this example:
     [+] found valid header
     [+] loaded 3 packets
     [+] finished loading savefile.
-    >>> print capfile.packets[0].packet.src
+    >>> print(capfile.packets[0].packet.src)
     00:11:22:33:44:55
-    >>> print capfile.packets[0].packet.payload
+    >>> print(capfile.packets[0].packet.payload)
     <hex string snipped>
 
 and this example to pull the raw payload from every packet in a pcap file:
@@ -137,7 +137,7 @@ and lastly:
     >>> from pcapfile import savefile
     >>> testcap = open('samples/test.pcap', 'rb')
     >>> capfile = savefile.load_savefile(testcap, layers=2, verbose=True)
-    >>> print capfile.packets[0].packet.payload
+    >>> print(capfile.packets[0].packet.payload)
     ipv4 packet from 192.168.2.47 to 173.194.37.82 carrying 44 bytes
 
 | The IPv4 module (``ip``) currently only supports basic IP headers,
