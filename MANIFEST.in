@@ -1,4 +1,5 @@
 include *.py
 include setup.py
+include LICENSE
 recursive-include pcapfile *.py
 recursive-include pcapfile/protocols *.py

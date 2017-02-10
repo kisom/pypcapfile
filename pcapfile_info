@@ -6,17 +6,24 @@ Command-line utility to dump information about a pcap file.
 import sys
 from pcapfile import savefile
 
+
 def pcap_info(pcap_file):
     """
     Main function to read and display information about a libpcap
     savefile.
     """
-    capfile = savefile.load_savefile(pcap_file, verbose=False)
+    with open(pcap_file, 'rb') as f:
+        capfile = savefile.load_savefile(f, verbose=False)
 
     if capfile.valid:
-        print capfile 
+        print(capfile)
     else:
-        print 'Invalid packet capture!'
+        print('Invalid packet capture!')
+
 
 if __name__ == '__main__':
-    pcap_info(sys.argv[1])
+    try:
+        pcap_info(sys.argv[1])
+    except Exception:
+        print('Invalid or missing pcap file')
+        sys.exit(1)
