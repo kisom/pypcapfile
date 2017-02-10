@@ -29,7 +29,7 @@ class UDP(ctypes.Structure):
 
     def __str__(self):
         packet = 'udp packet from port %d to port %d carrying %d bytes'
-        packet = packet % (self.src_port, self.dst_port, (len(self.payload) / 2))
+        packet = packet % (self.src_port, self.dst_port, (len(self.payload) // 2))
         return packet
 
     def __len__(self):
