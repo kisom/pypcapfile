@@ -81,4 +81,4 @@ class TestCase(unittest.TestCase):
             frame = pcap_packet.packet
             packet = frame.payload
             segment = packet.payload
-            self.assertEqual(len(segment), packet.len - len(packet.opt) / 2 - 20)
+            self.assertEqual(len(segment), packet.len - len(packet.opt) // 2 - 20)

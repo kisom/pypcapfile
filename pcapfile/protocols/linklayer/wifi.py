@@ -869,7 +869,7 @@ class Management(Wifi):
         output = {}
         oui = struct.unpack('BBB', payload[0:3])
         oui = b'-'.join([('%02x' % o).encode('ascii') for o in oui])
-        oui_type = struct.unpack('B', payload[3])[0]
+        oui_type = struct.unpack('B', payload[3:4])[0]
         oui_data = payload[4:]
         output['oui'] = oui.upper()
         output['oui_type'] = oui_type
@@ -967,7 +967,7 @@ class Management(Wifi):
             if MNGMT_TAGS[tag_num] == 'TAG_VENDOR_SPECIFIC_IE':
                 if mac_block == None:
                     vendor_ies.append(elem)
-                elif elem['payload']['oui'] == mac_block:
+                elif elem['payload']['oui'] == mac_block.encode('utf-8'):
                     if oui_type == None:
                         vendor_ies.append(elem)
                     elif elem['payload']['oui_type'] == oui_type:

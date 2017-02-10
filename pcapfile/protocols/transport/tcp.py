@@ -64,9 +64,9 @@ class TCP(ctypes.Structure):
         if self.rst: str_flags += 'R'
         if self.fin: str_flags += 'F'
         if self.urg: str_flags += 'U'
-        packet = packet % (str_flags, self.src_port, self.dst_port, (len(self.payload) / 2))
+        packet = packet % (str_flags, self.src_port, self.dst_port, (len(self.payload) // 2))
         return packet
 
     def __len__(self):
-        return max(self.data_offset, self.tcp_min_header_size) + len(self.payload) / 2
+        return max(self.data_offset, self.tcp_min_header_size) + len(self.payload) // 2
 
