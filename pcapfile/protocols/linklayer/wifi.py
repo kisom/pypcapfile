@@ -1222,7 +1222,8 @@ class Wifi(ctypes.Structure):
         flag_bits = format(flags, '08b')[::-1]
         self.to_ds = int(flag_bits[0])
         self.from_ds = int(flag_bits[1])
-        self.ds = str(int(self.to_ds)) + str(int(self.from_ds))
+        self.ds = b''.join([(flag_bits[0]).encode('ascii'),
+                            (flag_bits[1]).encode('ascii')])
         self.frag = int(flag_bits[2])
         self.retry = int(flag_bits[3])
         self.power_mgmt = int(flag_bits[4])
@@ -1238,13 +1239,13 @@ class Wifi(ctypes.Structure):
         self.name = None
         if self.category == 0:
             if self.subtype in _SUBTYPES_[0].keys():
-                self.name = _SUBTYPES_[0][self.subtype]
+                self.name = _SUBTYPES_[0][self.subtype].encode('ascii')
         elif self.category == 1:
             if self.subtype in _SUBTYPES_[1].keys():
-                self.name = _SUBTYPES_[1][self.subtype]
+                self.name = _SUBTYPES_[1][self.subtype].encode('ascii')
         elif self.category == 2:
             if self.subtype in _SUBTYPES_[2].keys():
-                self.name = _SUBTYPES_[2][self.subtype]
+                self.name = _SUBTYPES_[2][self.subtype].encode('ascii')
 
     def get_shark_field(self, fields):
         """get parameters via wireshark syntax.
@@ -1872,7 +1873,7 @@ class Management(Wifi):
             if MNGMT_TAGS[tag_num] == 'TAG_VENDOR_SPECIFIC_IE':
                 if mac_block == None:
                     vendor_ies.append(elem)
-                elif elem['payload']['oui'] == mac_block.encode('utf-8'):
+                elif elem['payload']['oui'] == mac_block.encode('ascii'):
                     if oui_type == None:
                         vendor_ies.append(elem)
                     elif elem['payload']['oui_type'] == oui_type:
