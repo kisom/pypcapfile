@@ -26,7 +26,7 @@ setup(name='pypcapfile',
                 ],
       package_data={'pcapfile.test': ['test/test_data']},
       data_files=[('share/doc/pcapfile',
-                   ['README.rst', 'AUTHORS', 'CONTRIBUTING'])]
+                   ['README.rst', 'AUTHORS', 'CONTRIBUTING'])],
       classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
