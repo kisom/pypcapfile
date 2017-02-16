@@ -20,39 +20,67 @@ Data
 Also have Radiotap support
 http://www.radiotap.org/defined-fields
 """
-import binascii
 import ctypes
 import struct
 import logging
 import operator
 import collections
 
-#wlan.fc.type
-_CATEGORIES_ = {0:'management', 1:'control', 2:'data'}
+# wlan.fc.type
+_CATEGORIES_ = {0: 'management', 1: 'control', 2: 'data'}
 
 _SUBTYPES_ = {}
 
-#wlan.fc.type_subtype
-_SUBTYPES_[0] = {0:'Association Request',
-        1:'Association Response', 2:'Reassociation Request',
-        3:'Reassociation Response', 4:'Probe Request',
-        5:'Probe Response', 8:'Beacon', 9:'ATIM',
-        10:'Disassociation', 11:'Authentication', 12:'Deauthentication',
-        13:'Action', 14:'Action No ACK'}
+# wlan.fc.type_subtype
+_SUBTYPES_[0] = {
+    0: 'Association Request',
+    1: 'Association Response',
+    2: 'Reassociation Request',
+    3: 'Reassociation Response',
+    4: 'Probe Request',
+    5: 'Probe Response',
+    8: 'Beacon',
+    9: 'ATIM',
+    10: 'Disassociation',
+    11: 'Authentication',
+    12: 'Deauthentication',
+    13: 'Action',
+    14: 'Action No ACK'
+}
 
-_SUBTYPES_[1] = {5:'VHT NDP Announcement', 7:'Control Wrapper', 8:'BAR',
-        9:'BACK', 10:'PS-POLL', 11:'RTS', 12:'CTS', 13:'ACK',
-        14:'CF-end', 15:'CF-end + CF-ack'}
+_SUBTYPES_[1] = {
+    5: 'VHT NDP Announcement',
+    7: 'Control Wrapper',
+    8: 'BAR',
+    9: 'BACK',
+    10: 'PS-POLL',
+    11: 'RTS',
+    12: 'CTS',
+    13: 'ACK',
+    14: 'CF-end',
+    15: 'CF-end + CF-ack'
+}
 
-_SUBTYPES_[2] = {0:'Data', 1:'Data + CF-ack', 2:'Data + CF-poll',
-        3:'Data+CF-ack+CF-poll', 4:'Null', 5:'CF-ack',
-        6:'CF-poll', 7:'CF-ack+CF-poll', 8:'QoS data',
-        9:'QoS data + CF-ack', 10:'QoS data + CF-poll',
-        11:'QoS data + CF-ack + CF-poll', 12:'QoS Null',
-        13:'Reserved', 14:'Qos + CF-poll(no data)',
-        15:'Qos + CF-ack(no data)'}
+_SUBTYPES_[2] = {
+    0: 'Data',
+    1: 'Data + CF-ack',
+    2: 'Data + CF-poll',
+    3: 'Data+CF-ack+CF-poll',
+    4: 'Null',
+    5: 'CF-ack',
+    6: 'CF-poll',
+    7: 'CF-ack+CF-poll',
+    8: 'QoS data',
+    9: 'QoS data + CF-ack',
+    10: 'QoS data + CF-poll',
+    11: 'QoS data + CF-ack + CF-poll',
+    12: 'QoS Null',
+    13: 'Reserved',
+    14: 'Qos + CF-poll(no data)',
+    15: 'Qos + CF-ack(no data)'
+}
 
-#wlan_mgt.tag
+# wlan_mgt.tag
 MNGMT_TAGS = {
     0: "TAG_SSID",
     1: "TAG_SUPP_RATES",
@@ -221,6 +249,7 @@ MNGMT_TAGS = {
     221: "TAG_VENDOR_SPECIFIC_IE"
 }
 
+
 def WIFI(frame, no_rtap=False):
     """calls wifi packet discriminator and constructor.
     :frame: ctypes.Structure
@@ -235,8 +264,9 @@ def WIFI(frame, no_rtap=False):
     try:
         pack = WiHelper.get_wifi_packet(frame, no_rtap)
     except Exception as e:
-        logging.exception("message")
+        logging.exception(e)
     return pack
+
 
 class WiHelper:
 
@@ -254,18 +284,17 @@ class WiHelper:
         :return: obj
             Wi-Fi packet
         """
-        rtap, packet = WiHelper._strip_rtap(frame)
+        _, packet = WiHelper._strip_rtap(frame)
         frame_control = struct.unpack('BB', packet[:2])
-        flags = frame_control[:1]
         cat = (frame_control[0] >> 2) & 0b0011
         s_type = frame_control[0] >> 4
 
         if cat not in _CATEGORIES_.keys():
-            logging.warn("unknown category: %d" % (cat))
+            logging.warning("unknown category: %d" % (cat))
             return Unknown(frame, no_rtap)
 
         if s_type not in _SUBTYPES_[cat].keys():
-            logging.warn("unknown subtype %d in %s category" % (s_type, _CATEGORIES_[cat]))
+            logging.warning("unknown subtype %d in %s category" % (s_type, _CATEGORIES_[cat]))
             return Unknown(frame, no_rtap)
 
         if cat == 0:
@@ -313,6 +342,7 @@ class WiHelper:
         """
         r_len = struct.unpack('H', frame[2:4])
         return r_len[0]
+
 
 class Radiotap(ctypes.Structure):
 
@@ -462,8 +492,7 @@ class Radiotap(ctypes.Structure):
                  ('prot_type', ctypes.c_char_p)]
 
     # Wireshark syntax conjugates of fields in object
-    _r_shark_ = {
-                 'radiotap.version': 'vers',
+    _r_shark_ = {'radiotap.version': 'vers',
                  'radiotap.pad': 'pad',
                  'radiotap.length': 'len',
                  'radiotap.present.tsft': 'present.tsft',
@@ -582,98 +611,97 @@ class Radiotap(ctypes.Structure):
                  'radiotap.vht.coding.2': 'vht.user_2.coding',
                  'radiotap.vht.nss.3': 'vht.user_3.nss',
                  'radiotap.vht.mcs.3': 'vht.user_3.mcs',
-                 'radiotap.vht.coding.3': 'vht.user_3.coding',
-                }
+                 'radiotap.vht.coding.3': 'vht.user_3.coding'}
 
     def __init__(self, rtap_bytes):
         """Constructor method.
         :rtap_bytes: ctypes.Structure
 
         """
-        self._raw = {}  # contains raw bytes,  for debugging purposes
-        self._bits = {} # contains bitstrings, for debugging purposes
-        pre = 0
+        super(Radiotap, self).__init__()
+        self._raw = {}   # contains raw bytes, for debugging purposes
+        self._bits = {}  # contains bitstrings, for debugging purposes
         idx = 0
         self._rtap = rtap_bytes
 
         # parse radiotap headers
-        self.vers = Radiotap.strip_vers(self._rtap[idx:idx+1])
+        self.vers = Radiotap.strip_vers(self._rtap[idx:idx + 1])
         idx += 1
 
-        self.pad = Radiotap.strip_pad(self._rtap[idx:idx+1])
+        self.pad = Radiotap.strip_pad(self._rtap[idx:idx + 1])
         idx += 1
 
-        self.len = Radiotap.strip_len(self._rtap[idx:idx+2])
+        self.len = Radiotap.strip_len(self._rtap[idx:idx + 2])
         idx += 2
 
-        self.present, self.present_bits = Radiotap.strip_present(self._rtap[idx:idx+4])
+        self.present, self.present_bits = Radiotap.strip_present(self._rtap[idx:idx + 4])
         idx += 4
 
         # parse radiotap payload
-        if self.present.tsft: # 8 byte
+        if self.present.tsft:  # 8 byte
             idx, self.mactime = self.strip_tsft(idx)
 
-        if self.present.flags: # 1 byte
+        if self.present.flags:  # 1 byte
             idx, self.flags = self.strip_flags(idx)
 
-        if self.present.rate: # 1 byte
+        if self.present.rate:  # 1 byte
             idx, self.rate = self.strip_rate(idx)
 
-        if self.present.channel: # 2 byte (align 2 byte)
+        if self.present.channel:  # 2 byte (align 2 byte)
             idx, self.chan = self.strip_chan(idx)
 
-        if self.present.fhss: # 2 byte
+        if self.present.fhss:  # 2 byte
             idx, self.fhss = self.strip_fhss(idx)
 
-        if self.present.dbm_antsignal: # 1 byte
+        if self.present.dbm_antsignal:  # 1 byte
             idx, self.dbm_antsignal = self.strip_dbm_antsignal(idx)
 
-        if self.present.dbm_antnoise: # 1 byte
+        if self.present.dbm_antnoise:  # 1 byte
             idx, self.dbm_antnoise = self.strip_dbm_antnoise(idx)
 
-        if self.present.lock_quality: # 2 byte (align 2 byte)
+        if self.present.lock_quality:  # 2 byte (align 2 byte)
             idx, self.lock_quality = self.strip_lock_quality(idx)
 
-        if self.present.tx_attenuation: # 1 byte (align 2 byte)
+        if self.present.tx_attenuation:  # 1 byte (align 2 byte)
             idx, self.tx_attenuation = self.strip_tx_attenuation(idx)
 
-        if self.present.db_tx_attenuation: # 1 byte (align 2 byte)
+        if self.present.db_tx_attenuation:  # 1 byte (align 2 byte)
             idx, self.db_tx_attenuation = self.strip_db_tx_attenuation(idx)
 
-        if self.present.dbm_tx_power: # 1 byte (align 1 byte)
+        if self.present.dbm_tx_power:  # 1 byte (align 1 byte)
             idx, self.dbm_tx_power = self.strip_dbm_tx_power(idx)
 
-        if self.present.antenna: # 1 byte
+        if self.present.antenna:  # 1 byte
             idx, self.antenna = self.strip_antenna(idx)
 
-        if self.present.db_antsignal: # 1 byte
+        if self.present.db_antsignal:  # 1 byte
             idx, self.db_antsignal = self.strip_db_antsignal(idx)
 
-        if self.present.db_antnoise: # 1 byte
+        if self.present.db_antnoise:  # 1 byte
             idx, self.db_antnoise = self.strip_db_antnoise(idx)
 
-        if self.present.rxflags: # 2 byte (align 2 byte)
+        if self.present.rxflags:  # 2 byte (align 2 byte)
             idx, self.rxflags = self.strip_rx_flags(idx)
 
-        if self.present.txflags: # 1 byte (align 2 byte)
+        if self.present.txflags:  # 1 byte (align 2 byte)
             idx, self.txflags = self.strip_tx_flags(idx)
 
-        if self.present.rts_retries: # 1 byte
+        if self.present.rts_retries:  # 1 byte
             idx, self.rts_retries = self.strip_rts_retries(idx)
 
-        if self.present.data_retries: # 1 byte
+        if self.present.data_retries:  # 1 byte
             idx, self.data_retries = self.strip_data_retries(idx)
 
-        if self.present.xchannel: # 7 byte (align 2 byte)
+        if self.present.xchannel:  # 7 byte (align 2 byte)
             idx, self.xchannel = self.strip_xchannel(idx)
 
-        if self.present.mcs: # 3 byte (align 1 byte)
+        if self.present.mcs:  # 3 byte (align 1 byte)
             idx, self.mcs = self.strip_mcs(idx)
 
-        if self.present.ampdu: # 8 byte (align 4 byte)
+        if self.present.ampdu:  # 8 byte (align 4 byte)
             idx, self.ampdu = self.strip_ampdu(idx)
 
-        if self.present.vht: # 12 byte (align 2 byte)
+        if self.present.vht:  # 12 byte (align 2 byte)
             idx, self.vht = self.strip_vht(idx)
 
         self.prot_type = self.extract_protocol()
@@ -710,40 +738,41 @@ class Radiotap(ctypes.Structure):
         :return: str
         :return: namedtuple
         """
-        present = collections.namedtuple('present', ['tsft', 'flags', 'rate',
-            'channel', 'fhss', 'dbm_antsignal', 'dbm_antnoise', 'lock_quality',
-            'tx_attenuation', 'db_tx_attenuation', 'dbm_tx_power', 'antenna',
-            'db_antsignal', 'db_antnoise', 'rxflags', 'txflags', 'rts_retries',
-            'data_retries', 'xchannel', 'mcs', 'ampdu', 'vht', 'rtap_ns',
-            'ven_ns', 'ext'])
+        present = collections.namedtuple(
+            'present', ['tsft', 'flags', 'rate', 'channel', 'fhss',
+                        'dbm_antsignal', 'dbm_antnoise', 'lock_quality',
+                        'tx_attenuation', 'db_tx_attenuation', 'dbm_tx_power',
+                        'antenna', 'db_antsignal', 'db_antnoise', 'rxflags',
+                        'txflags', 'rts_retries', 'data_retries', 'xchannel',
+                        'mcs', 'ampdu', 'vht', 'rtap_ns', 'ven_ns', 'ext'])
 
         val = struct.unpack('<L', payload)[0]
         bits = format(val, '032b')[::-1]
-        present.tsft = int(bits[0])              # timer synchronization function
-        present.flags = int(bits[1])             # flags
-        present.rate = int(bits[2])              # rate
-        present.channel = int(bits[3])           # channel
-        present.fhss = int(bits[4])              # frequency hoping spread spectrum
-        present.dbm_antsignal = int(bits[5])     # dbm antenna signal
-        present.dbm_antnoise = int(bits[6])      # dbm antenna noinse
-        present.lock_quality = int(bits[7])      # quality of barker code lock
-        present.tx_attenuation = int(bits[8])    # transmitter attenuation
-        present.db_tx_attenuation = int(bits[9]) # decibel transmit attenuation
-        present.dbm_tx_power = int(bits[10])     # dbm transmit power
-        present.antenna = int(bits[11])          # antenna
-        present.db_antsignal = int(bits[12])     # db antenna signal
-        present.db_antnoise = int(bits[13])      # db antenna noise
-        present.rxflags = int(bits[14])          # receiver flags
-        present.txflags = int(bits[15])          # transmitter flags
-        present.rts_retries = int(bits[16])      # rts(request to send) retries
-        present.data_retries = int(bits[17])     # data retries
-        present.xchannel = int(bits[18])         # xchannel
-        present.mcs = int(bits[19])              # modulation and coding scheme
-        present.ampdu = int(bits[20])            # aggregated mac protocol data unit
-        present.vht = int(bits[21])              # very high throughput
-        present.rtap_ns = int(bits[29])          # radiotap namespace
-        present.ven_ns = int(bits[30])           # vendor namespace
-        present.ext = int(bits[31])              # extension
+        present.tsft = int(bits[0])               # timer synchronization function
+        present.flags = int(bits[1])              # flags
+        present.rate = int(bits[2])               # rate
+        present.channel = int(bits[3])            # channel
+        present.fhss = int(bits[4])               # frequency hoping spread spectrum
+        present.dbm_antsignal = int(bits[5])      # dbm antenna signal
+        present.dbm_antnoise = int(bits[6])       # dbm antenna noinse
+        present.lock_quality = int(bits[7])       # quality of barker code lock
+        present.tx_attenuation = int(bits[8])     # transmitter attenuation
+        present.db_tx_attenuation = int(bits[9])  # decibel transmit attenuation
+        present.dbm_tx_power = int(bits[10])      # dbm transmit power
+        present.antenna = int(bits[11])           # antenna
+        present.db_antsignal = int(bits[12])      # db antenna signal
+        present.db_antnoise = int(bits[13])       # db antenna noise
+        present.rxflags = int(bits[14])           # receiver flags
+        present.txflags = int(bits[15])           # transmitter flags
+        present.rts_retries = int(bits[16])       # rts(request to send) retries
+        present.data_retries = int(bits[17])      # data retries
+        present.xchannel = int(bits[18])          # xchannel
+        present.mcs = int(bits[19])               # modulation and coding scheme
+        present.ampdu = int(bits[20])             # aggregated mac protocol data unit
+        present.vht = int(bits[21])               # very high throughput
+        present.rtap_ns = int(bits[29])           # radiotap namespace
+        present.ven_ns = int(bits[30])            # vendor namespace
+        present.ext = int(bits[31])               # extension
 
         return present, bits
 
@@ -766,8 +795,9 @@ class Radiotap(ctypes.Structure):
             idx
         :return: collections.namedtuple
         """
-        flags = collections.namedtuple('flags', ['cfp', 'preamble', 'wep',
-            'fragmentation', 'fcs', 'datapad', 'badfcs', 'shortgi'])
+        flags = collections.namedtuple(
+            'flags', ['cfp', 'preamble', 'wep', 'fragmentation', 'fcs',
+                      'datapad', 'badfcs', 'shortgi'])
         val, = struct.unpack_from('<B', self._rtap, idx)
         bits = format(val, '08b')[::-1]
         flags.cfp = int(bits[0])
@@ -800,9 +830,10 @@ class Radiotap(ctypes.Structure):
             idx
         :return: collections.namedtuple
         """
-        chan = collections.namedtuple('chan', ['freq', 'turbo', 'cck', 'ofdm',
-            'two_g', 'five_g', 'passive', 'dynamic', 'gfsk',
-            'gsm', 'static_turbo', 'half_rate', 'quarter_rate'])
+        chan = collections.namedtuple(
+            'chan', ['freq', 'turbo', 'cck', 'ofdm', 'two_g', 'five_g',
+                     'passive', 'dynamic', 'gfsk', 'gsm', 'static_turbo',
+                     'half_rate', 'quarter_rate'])
 
         idx = Radiotap.align(idx, 2)
         freq, flags, = struct.unpack_from('<HH', self._rtap, idx)
@@ -979,16 +1010,16 @@ class Radiotap(ctypes.Structure):
             idx
         :return: collections.namedtuple
         """
-        xchannel = collections.namedtuple('xchannel', ['flags',
-            'freq', 'channel', 'max_power'])
+        xchannel = collections.namedtuple(
+            'xchannel', ['flags', 'freq', 'channel', 'max_power'])
 
-        flags = collections.namedtuple('flags', ['turbo', 'cck',
-            'ofdm', 'two_g', 'five_g', 'passive', 'dynamic', 'gfsk',
-            'gsm', 'sturbo', 'hafl', 'quarter', 'ht_20', 'ht_40u', 'ht_40d'])
+        flags = collections.namedtuple(
+            'flags', ['turbo', 'cck', 'ofdm', 'two_g', 'five_g', 'passive',
+                      'dynamic', 'gfsk', 'gsm', 'sturbo', 'hafl', 'quarter',
+                      'ht_20', 'ht_40u', 'ht_40d'])
 
         idx = Radiotap.align(idx, 2)
-        flag_val, freq, channel, max_power =\
-                struct.unpack_from('<lHBB', self._rtap, idx)
+        flag_val, freq, channel, max_power = struct.unpack_from('<lHBB', self._rtap, idx)
 
         xchannel.freq = freq
         xchannel.channel = channel
@@ -1023,24 +1054,25 @@ class Radiotap(ctypes.Structure):
             idx
         :return: collections.namedtuple
         """
-        mcs = collections.namedtuple('mcs', ['known', 'index', 'have_bw',
-            'have_mcs', 'have_gi', 'have_format', 'have_fec', 'have_stbc',
-            'have_ness', 'ness_bit1'])
+        mcs = collections.namedtuple(
+            'mcs', ['known', 'index', 'have_bw', 'have_mcs', 'have_gi',
+                    'have_format', 'have_fec', 'have_stbc', 'have_ness',
+                    'ness_bit1'])
 
         idx = Radiotap.align(idx, 1)
         known, flags, index = struct.unpack_from('<BBB', self._rtap, idx)
         bits = format(flags, '032b')[::-1]
 
-        mcs.known = known              # Known MCS information
-        mcs.index = index              # MCS index
-        mcs.have_bw = int(bits[0])     # Bandwidth
-        mcs.have_mcs = int(bits[1])    # MCS
-        mcs.have_gi = int(bits[2])     # Guard Interval
-        mcs.have_format = int(bits[3]) # Format
-        mcs.have_fec = int(bits[4])    # FEC(Forward Error Correction) type
-        mcs.have_stbc = int(bits[5])   # Space Time Block Coding
-        mcs.have_ness = int(bits[6])   # Number of Extension Spatial Streams
-        mcs.ness_bit1 = int(bits[7])   # Number of Extension Spatial Streams bit 1
+        mcs.known = known               # Known MCS information
+        mcs.index = index               # MCS index
+        mcs.have_bw = int(bits[0])      # Bandwidth
+        mcs.have_mcs = int(bits[1])     # MCS
+        mcs.have_gi = int(bits[2])      # Guard Interval
+        mcs.have_format = int(bits[3])  # Format
+        mcs.have_fec = int(bits[4])     # FEC(Forward Error Correction) type
+        mcs.have_stbc = int(bits[5])    # Space Time Block Coding
+        mcs.have_ness = int(bits[6])    # Number of Extension Spatial Streams
+        mcs.ness_bit1 = int(bits[7])    # Number of Extension Spatial Streams bit 1
         return idx + 3, mcs
 
     def strip_ampdu(self, idx):
@@ -1050,10 +1082,11 @@ class Radiotap(ctypes.Structure):
             idx
         :return: collections.namedtuple
         """
-        ampdu = collections.namedtuple('ampdu', ['reference', 'crc_val',
-            'reservered', 'flags'])
-        flags = collections.namedtuple('flags', ['report_zerolen', 'is_zerolen',
-            'lastknown', 'last', 'delim_crc_error'])
+        ampdu = collections.namedtuple(
+            'ampdu', ['reference', 'crc_val', 'reservered', 'flags'])
+        flags = collections.namedtuple(
+            'flags', ['report_zerolen', 'is_zerolen', 'lastknown', 'last',
+                      'delim_crc_error'])
 
         idx = Radiotap.align(idx, 4)
         refnum, flag_vals, crc_val, reserved = struct.unpack_from('<LHBB', self._rtap, idx)
@@ -1077,30 +1110,30 @@ class Radiotap(ctypes.Structure):
             idx
         :return: collections.namedtuple
         """
-        vht = collections.namedtuple('vht', ['known_bits', 'have_stbc',
-            'have_txop_ps', 'have_gi', 'have_sgi_nsym_da', 'have_ldpc_extra',
-            'have_beamformed', 'have_bw', 'have_gid', 'have_paid',
-            'stbc', 'txop_ps', 'gi', 'sgi_nysm_da', 'ldpc_extra', 'group_id',
-            'partial_id', 'beamformed', 'user_0' ,'user_1', 'user_2', 'user_3'])
+        vht = collections.namedtuple(
+            'vht', ['known_bits', 'have_stbc', 'have_txop_ps', 'have_gi',
+                    'have_sgi_nsym_da', 'have_ldpc_extra', 'have_beamformed',
+                    'have_bw', 'have_gid', 'have_paid', 'stbc', 'txop_ps', 'gi',
+                    'sgi_nysm_da', 'ldpc_extra', 'group_id', 'partial_id',
+                    'beamformed', 'user_0', 'user_1', 'user_2', 'user_3'])
         user = collections.namedtuple('user', ['nss', 'mcs', 'coding'])
 
         idx = Radiotap.align(idx, 2)
         known, flags, bw = struct.unpack_from('<HBB', self._rtap, idx)
-        mcs_nss_0, mcs_nss_1, mcs_nss_2, mcs_nss_3 =\
-                struct.unpack_from('<BBBB', self._rtap, idx+4)
-        coding, group_id, partial_id = struct.unpack_from('<BBH', self._rtap, idx+8)
+        mcs_nss_0, mcs_nss_1, mcs_nss_2, mcs_nss_3 = struct.unpack_from('<BBBB', self._rtap, idx + 4)
+        coding, group_id, partial_id = struct.unpack_from('<BBH', self._rtap, idx + 8)
 
         known_bits = format(known, '032b')[::-1]
         vht.known_bits = known_bits
-        vht.have_stbc = int(known_bits[0])        # Space Time Block Coding
-        vht.have_txop_ps = int(known_bits[1])     # TXOP_PS_NOT_ALLOWD
-        vht.have_gi = int(known_bits[2])          # Short/Long Guard Interval
-        vht.have_sgi_nsym_da = int(known_bits[3]) # Short Guard Interval Nsym Disambiguation
-        vht.have_ldpc_extra = int(known_bits[4])  # LDPC(Low Density Parity Check)
-        vht.have_beamformed = int(known_bits[5])  # Beamformed
-        vht.have_bw = int(known_bits[6])          # Bandwidth
-        vht.have_gid = int(known_bits[7])         # Group ID
-        vht.have_paid = int(known_bits[8])        # Partial AID
+        vht.have_stbc = int(known_bits[0])         # Space Time Block Coding
+        vht.have_txop_ps = int(known_bits[1])      # TXOP_PS_NOT_ALLOWD
+        vht.have_gi = int(known_bits[2])           # Short/Long Guard Interval
+        vht.have_sgi_nsym_da = int(known_bits[3])  # Short Guard Interval Nsym Disambiguation
+        vht.have_ldpc_extra = int(known_bits[4])   # LDPC(Low Density Parity Check)
+        vht.have_beamformed = int(known_bits[5])   # Beamformed
+        vht.have_bw = int(known_bits[6])           # Bandwidth
+        vht.have_gid = int(known_bits[7])          # Group ID
+        vht.have_paid = int(known_bits[8])         # Partial AID
 
         flag_bits = format(flags, '032b')[::-1]
         vht.flag_bits = flag_bits
@@ -1128,7 +1161,7 @@ class Radiotap(ctypes.Structure):
                 elif i == 1:
                     vht.user_1 = user(nss, mcs, coding)
                 elif i == 2:
-                    vht._user_2 = user(nss, mcs, coding)
+                    vht.user_2 = user(nss, mcs, coding)
                 elif i == 3:
                     vht.user_3 = user(nss, mcs, coding)
 
@@ -1166,13 +1199,14 @@ class Radiotap(ctypes.Structure):
         :align: int
         :return: int
         """
-        return (val + align - 1) & ~(align-1)
+        return (val + align - 1) & ~(align - 1)
+
 
 class Wifi(ctypes.Structure):
 
     """Base Wi-Fi Packet"""
 
-    _fields_ = [('name',  ctypes.c_char_p),      # name of packet
+    _fields_ = [('name', ctypes.c_char_p),       # name of packet
                 ('vers', ctypes.c_ushort),       # version
                 ('category', ctypes.c_ushort),   # category
                 ('subtype', ctypes.c_ushort),    # subtype
@@ -1187,8 +1221,7 @@ class Wifi(ctypes.Structure):
                 ('duration', ctypes.c_uint)]     # duration
 
     # Wireshark syntax conjugates of fields in object (base)
-    _shark_ = {
-               'wlan.fc.version': 'vers',
+    _shark_ = {'wlan.fc.version': 'vers',
                'wlan.fc.type': 'category',
                'wlan.fc.type_subtype': 'subtype',
                'wlan.fc.ds': 'ds',
@@ -1197,14 +1230,14 @@ class Wifi(ctypes.Structure):
                'wlan.fc.pwrmgt': 'power_mgmt',
                'wlan.fc.wep': 'wep',
                'wlan.fc.order': 'order',
-               'wlan.duration': 'duration'
-              }
+               'wlan.duration': 'duration'}
 
     def __init__(self, frame, no_rtap=False):
         """Constructor method.
         Parse common headers of all Wi-Fi frames.
         :frame: ctypes.Structure
         """
+        super(Wifi, self).__init__()
         self._raw = {}
         if not no_rtap:
             rtap_bytes, self._packet = WiHelper._strip_rtap(frame)
@@ -1213,7 +1246,7 @@ class Wifi(ctypes.Structure):
             self._packet = frame
             self.radiotap = None
 
-        f_cntrl = struct.unpack('BB', self._packet[:2]) #frame control
+        f_cntrl = struct.unpack('BB', self._packet[:2])  # frame control
         flags = f_cntrl[1]
         self.vers = f_cntrl[0] & 0b0011
         self.category = (f_cntrl[0] >> 2) & 0b0011
@@ -1231,10 +1264,10 @@ class Wifi(ctypes.Structure):
         self.wep = int(flag_bits[6])
         self.order = int(flag_bits[7])
 
-        #TODO: parse duration with respect to field/subfield
-        #since some bits might be reserved for types like data (0x20)
-        #https://community.arubanetworks.com/t5/Technology-Blog/802-11-Duration-ID-Field/ba-p/235872
-        self.duration = struct.unpack('H', self._packet[2:4])[0] # us
+        # TODO: parse duration with respect to field/subfield
+        # since some bits might be reserved for types like data (0x20)
+        # https://community.arubanetworks.com/t5/Technology-Blog/802-11-Duration-ID-Field/ba-p/235872
+        self.duration = struct.unpack('H', self._packet[2:4])[0]  # us
 
         self.name = None
         if self.category == 0:
@@ -1258,9 +1291,9 @@ class Wifi(ctypes.Structure):
         """
         keys, exist, out = None, {}, None
 
-        if type(fields) == str:
+        if isinstance(fields, str):
             fields = [fields]
-        elif type(fields) != list:
+        elif not isinstance(fields, list):
             logging.error('invalid input type')
             return None
 
@@ -1301,8 +1334,7 @@ class Wifi(ctypes.Structure):
             11:22:33:aa:bb:cc
         """
         mac_addr = bytearray(mac_addr)
-        mac = b':'.join([('%02x' % o).encode('ascii')
-            for o in mac_addr])
+        mac = b':'.join([('%02x' % o).encode('ascii') for o in mac_addr])
         return mac
 
     def get_hex_repr(self):
@@ -1331,40 +1363,35 @@ class Wifi(ctypes.Structure):
             basic service sed identifier (bssid)
         """
         qos_idx, seq_idx = 0, 0
-        sa, ta, ra, da, bssid =\
-            None, None, None, None, None
+        sa, ta, ra, da, bssid = None, None, None, None, None
 
         if self.to_ds == 1 and self.from_ds == 1:
-            (ra, ta, da) =\
-                struct.unpack('!6s6s6s', self._packet[4:22])
+            (ra, ta, da) = struct.unpack('!6s6s6s', self._packet[4:22])
             sa = struct.unpack('!6s', self._packet[24:30])[0]
             qos_idx = 30
             seq_idx = 22
         elif self.to_ds == 0 and self.from_ds == 1:
-            (ra, ta, sa) =\
-                struct.unpack('!6s6s6s', self._packet[4:22])
+            (ra, ta, sa) = struct.unpack('!6s6s6s', self._packet[4:22])
             qos_idx = 24
             seq_idx = 22
         elif self.to_ds == 1 and self.from_ds == 0:
-            (ra, ta, da) =\
-                struct.unpack('!6s6s6s', self._packet[4:22])
+            (ra, ta, da) = struct.unpack('!6s6s6s', self._packet[4:22])
             qos_idx = 24
             seq_idx = 22
         elif self.to_ds == 0 and self.from_ds == 0:
-            (ra, ta, bssid) =\
-                struct.unpack('!6s6s6s', self._packet[4:22])
+            (ra, ta, bssid) = struct.unpack('!6s6s6s', self._packet[4:22])
             qos_idx = 24
             seq_idx = 22
 
-        if ta != None:
+        if ta is not None:
             ta = Wifi.get_mac_addr(ta)
-        if ra != None:
+        if ra is not None:
             ra = Wifi.get_mac_addr(ra)
-        if sa != None:
+        if sa is not None:
             sa = Wifi.get_mac_addr(sa)
-        if da != None:
+        if da is not None:
             da = Wifi.get_mac_addr(da)
-        if bssid != None:
+        if bssid is not None:
             bssid = Wifi.get_mac_addr(bssid)
 
         return seq_idx, qos_idx, sa, ta, ra, da, bssid
@@ -1378,7 +1405,7 @@ class Wifi(ctypes.Structure):
         :return: int
             fragment number
         """
-        seq_cntrl = struct.unpack('H', self._packet[idx:idx+2])[0]
+        seq_cntrl = struct.unpack('H', self._packet[idx:idx + 2])[0]
         seq_num = seq_cntrl >> 4
         frag_num = seq_cntrl & 0x000f
         return seq_num, frag_num
@@ -1402,9 +1429,9 @@ class Wifi(ctypes.Structure):
                 key = elem[0]
                 try:
                     val = operator.attrgetter(key)(self)
-                except:
+                except Exception:
                     val = None
-                if type(val) == list:
+                if isinstance(val, list):
                     if val:
                         out_str += "{} <list>[{}]\n".format(key, type(val[0]))
                     else:
@@ -1420,11 +1447,12 @@ class Wifi(ctypes.Structure):
                 key = elem[0]
                 try:
                     val = operator.attrgetter(key)(self.radiotap)
-                except:
+                except Exception:
                     val = None
-                if val != None:
+                if val is not None:
                     out_str += "radiotap.{}: {}\n".format(key, val)
         return out_str
+
 
 class Data(Wifi):
 
@@ -1437,6 +1465,7 @@ class Data(Wifi):
             shall parse radiotap headers
         """
         Wifi.__init__(self, frame, no_rtap)
+
 
 class QosData(Data):
 
@@ -1456,8 +1485,7 @@ class QosData(Data):
                  ('payload', list)]                 # payload
 
     # Wireshark syntax conjugates of fields in object (subfield shark)
-    _s_shark_ = {
-                 'wlan.sa': 'sa',
+    _s_shark_ = {'wlan.sa': 'sa',
                  'wlan.ta': 'ta',
                  'wlan.ra': 'ra',
                  'wlan.da': 'da',
@@ -1467,8 +1495,7 @@ class QosData(Data):
                  'wlan.qos.bit4': 'qos_bit',
                  'wlan.qos.ack': 'qos_ack',
                  'wlan.qos.amsdupresent': 'amsdupresent',
-                 'wlan.ccmp.extiv': 'ccmp_extiv'
-                }
+                 'wlan.ccmp.extiv': 'ccmp_extiv'}
 
     def __init__(self, frame, no_rtap=False, parse_amsdu=True):
         """Constructor method.
@@ -1484,14 +1511,13 @@ class QosData(Data):
         self.ccmp_extiv = None
         self.payload = []
 
-        seq_idx, qos_idx, self.sa, self.ta, self.ra, self.da, _  =\
-                self.strip_mac_addrs()
+        seq_idx, qos_idx, self.sa, self.ta, self.ra, self.da, _ = self.strip_mac_addrs()
 
         self.seq_num, self.frag_num = self.strip_seq_cntrl(seq_idx)
 
         idx = qos_idx
         incr, self.qos_pri, self.qos_bit, self.qos_ack, self.amsdupresent =\
-                self.strip_qos_cntrl(idx, self.radiotap.prot_type)
+            self.strip_qos_cntrl(idx, self.radiotap.prot_type)
         idx += incr
 
         if self.wep == 1:
@@ -1509,7 +1535,7 @@ class QosData(Data):
                     msdu = {}
                     offset, llc = self.strip_llc(idx)
                     msdu['llc'] = llc
-                    msdu['payload'] = self._packet[idx+offset:]
+                    msdu['payload'] = self._packet[idx + offset:]
                     self.payload.append(msdu)
                 else:
                     self.payload.append({'payload': self._packet[idx:]})
@@ -1530,7 +1556,7 @@ class QosData(Data):
         :return: int
             amsdupresent(aggregated mac service data unit)
         """
-        qos_cntrl, = struct.unpack('H', self._packet[idx:idx+2])
+        qos_cntrl, = struct.unpack('H', self._packet[idx:idx + 2])
         qos_cntrl_bits = format(qos_cntrl, '016b')[::-1]
         qos_pri = qos_cntrl & 0x000f
         qos_bit = int(qos_cntrl_bits[5])
@@ -1550,7 +1576,7 @@ class QosData(Data):
         """
         ccmp_extiv = None
         if len(self._packet[idx:]) >= 8:
-            raw_bytes = self._packet[idx:idx+8]
+            raw_bytes = self._packet[idx:idx + 8]
             ccmp_extiv, = struct.unpack_from('Q', raw_bytes, 0)
         return 8, ccmp_extiv
 
@@ -1563,24 +1589,30 @@ class QosData(Data):
         :return: int
             number of processed bytes
         """
-        padding = 0 # length of msdu payload has to be multiple of 4,
-                    # this guaranteed with padding
+        # length of msdu payload has to be multiple of 4,
+        # this guaranteed with padding
+        padding = 0
         len_payload = 0
-        msdu = {'llc':{}, 'wlan.da':None, 'wlan.sa':None,
-                'payload':None, 'length':0}
+        msdu = {
+            'llc': {},
+            'wlan.da': None,
+            'wlan.sa': None,
+            'payload': None,
+            'length': 0
+        }
 
-        (da_mac, sa_mac) = struct.unpack('!6s6s', self._packet[idx:idx+12])
+        (da_mac, sa_mac) = struct.unpack('!6s6s', self._packet[idx:idx + 12])
         msdu['wlan.da'] = Wifi.get_mac_addr(da_mac)
         msdu['wlan.sa'] = Wifi.get_mac_addr(sa_mac)
         idx += 12
-        msdu['length'] = struct.unpack('!H', self._packet[idx:idx+2])[0]
+        msdu['length'] = struct.unpack('!H', self._packet[idx:idx + 2])[0]
         idx += 2
         offset, msdu['llc'] = self.strip_llc(idx)
         idx += offset
         len_payload = msdu['length'] - offset
-        msdu['payload'] = self._packet[idx:idx+len_payload]
+        msdu['payload'] = self._packet[idx:idx + len_payload]
         padding = 4 - (len_payload % 4)
-        return msdu, msdu['length']+padding+12
+        return msdu, msdu['length'] + padding + 12
 
     def strip_llc(self, idx):
         """strip(4 or 8 byte) logical link control headers
@@ -1596,22 +1628,22 @@ class QosData(Data):
         """
         llc = {}
         snap = 170
-        llc_dsap = struct.unpack('B', self._packet[idx:idx+1])[0]
+        llc_dsap = struct.unpack('B', self._packet[idx:idx + 1])[0]
         llc['dsap.dsap'] = llc_dsap >> 1
         llc['dsap.ig'] = llc_dsap & 0b01
         idx += 1
-        llc_ssap = struct.unpack('B', self._packet[idx:idx+1])[0]
+        llc_ssap = struct.unpack('B', self._packet[idx:idx + 1])[0]
         llc['ssap.sap'] = llc_ssap >> 1
         llc['ssap.cr'] = llc_ssap & 0b01
         idx += 1
         if llc_dsap == snap and llc_ssap == snap:
-            llc_control = struct.unpack('B', self._packet[idx:idx+1])[0]
+            llc_control = struct.unpack('B', self._packet[idx:idx + 1])[0]
             llc['control.u_modifier_cmd'] = llc_control >> 2
             llc['control.ftype'] = llc_control & 0x03
             idx += 1
-            llc['organization_code'] = self._packet[idx:idx+3]
+            llc['organization_code'] = self._packet[idx:idx + 3]
             idx += 3
-            llc['type'] = self._packet[idx:idx+2]
+            llc['type'] = self._packet[idx:idx + 2]
             return 8, llc
         else:
             return 4, llc
@@ -1620,6 +1652,7 @@ class QosData(Data):
         frame = "%s (sa: %s, ta: %s, ra: %s, da: %s, ds: %s, seq: %s)"
         frame = frame % (self.name, self.sa, self.ta, self.ra, self.da, self.ds, self.seq_num)
         return frame
+
 
 class Management(Wifi):
 
@@ -1640,8 +1673,7 @@ class Management(Wifi):
                       ('del_back', ctypes.c_bool),       # delayed block acknowledgement
                       ('imm_back', ctypes.c_bool)]       # immediate block acknowledgement
 
-    _scapabilities_ = {
-                       'wlan_mgt.fixed.capabilities.ess': 'ess',
+    _scapabilities_ = {'wlan_mgt.fixed.capabilities.ess': 'ess',
                        'wlan_mgt.fixed.capabilities.ibss': 'ibss',
                        'wlan_mgt.fixed.capabilities.priv': 'priv',
                        'wlan_mgt.fixed.capabilities.preamble': 'short_pre',
@@ -1653,8 +1685,7 @@ class Management(Wifi):
                        'wlan_mgt.fixed.capabilities.radio_measurement': 'radio_meas',
                        'wlan_mgt.fixed.capabilities.dss_ofdm': 'dss_ofdm',
                        'wlan_mgt.fixed.capabilities.del_blk_ack': 'del_back',
-                       'wlan_mgt.fixed_capabilities.imm_blk_ack': 'imm_back'
-                      }
+                       'wlan_mgt.fixed_capabilities.imm_blk_ack': 'imm_back'}
 
     def __init__(self, frame, no_rtap=False):
         """Constructor Method
@@ -1662,7 +1693,7 @@ class Management(Wifi):
         :subtype: int
         """
         Wifi.__init__(self, frame, no_rtap)
-        self.tagged_params = None
+        self.tagged_params = []
         self._raw_tagged_params = None
         self.timestamp = None
         self.interval = None
@@ -1684,16 +1715,16 @@ class Management(Wifi):
         :return: int
             0 in succ, 1 for
         """
-        fcs_len = 4 # wlan.fcs (4 bytes)
+        fcs_len = 4  # wlan.fcs (4 bytes)
         idx = 0
         tagged_params = []
         while idx < len(raw_tagged_params) - fcs_len:
-            tag_num, tag_len = struct.unpack('BB', raw_tagged_params[idx:idx+2])
+            tag_num, tag_len = struct.unpack('BB', raw_tagged_params[idx:idx + 2])
             idx += 2
             if len(raw_tagged_params) >= idx + tag_len:
                 param = {}
                 param['number'], param['length'] = tag_num, tag_len
-                payload = raw_tagged_params[idx:idx+tag_len]
+                payload = raw_tagged_params[idx:idx + tag_len]
                 if tag_num in MNGMT_TAGS:
                     param['name'] = MNGMT_TAGS[tag_num]
                     if MNGMT_TAGS[tag_num] == 'TAG_VENDOR_SPECIFIC_IE':
@@ -1705,11 +1736,11 @@ class Management(Wifi):
                 tagged_params.append(param)
                 idx += tag_len
             else:
-                logging.warn('out tag length header points out of boundary')
+                logging.warning('out tag length header points out of boundary')
                 log_msg = 'index: {p_idx}, pack_len: {p_len}'
-                log_msg = log_msg.format(p_idx=idx+tag_len,
-                        p_len=len(raw_tagged_params))
-                logging.warn(log_msg)
+                log_msg = log_msg.format(p_idx=idx + tag_len,
+                                         p_len=len(raw_tagged_params))
+                logging.warning(log_msg)
                 return 1, tagged_params
         return 0, tagged_params
 
@@ -1726,19 +1757,19 @@ class Management(Wifi):
         capabils = {}
         fix_cap = struct.unpack('H', payload)[0]
         cap_bits = format(fix_cap, '016b')[::-1]
-        capabils['ess'] = int(cap_bits[0])            # Extended Service Set
-        capabils['ibss'] = int(cap_bits[1])           # Independent Basic Service Set
-        capabils['priv'] = int(cap_bits[4])           # Privacy
-        capabils['short_preamble'] = int(cap_bits[5]) # Short Preamble
-        capabils['pbcc'] = int(cap_bits[6])           # Packet Binary Convolutional Code
-        capabils['chan_agility'] = int(cap_bits[7])   # Channel Agility
-        capabils['spec_man'] = int(cap_bits[8])       # Spectrum Management
-        capabils['short_slot'] = int(cap_bits[10])    # Short Slot Time
-        capabils['apsd'] = int(cap_bits[11])          # Automatic Power Save Delivery
-        capabils['radio_meas'] = int(cap_bits[12])    # Radio Measurement
-        capabils['dss_ofdm'] = int(cap_bits[13])      # Direct Spread Spectrum
-        capabils['del_back'] = int(cap_bits[14])      # Delayed Block Acknowledgement
-        capabils['imm_back'] = int(cap_bits[15])      # Immediate Block Acknowledgement
+        capabils['ess'] = int(cap_bits[0])             # Extended Service Set
+        capabils['ibss'] = int(cap_bits[1])            # Independent Basic Service Set
+        capabils['priv'] = int(cap_bits[4])            # Privacy
+        capabils['short_preamble'] = int(cap_bits[5])  # Short Preamble
+        capabils['pbcc'] = int(cap_bits[6])            # Packet Binary Convolutional Code
+        capabils['chan_agility'] = int(cap_bits[7])    # Channel Agility
+        capabils['spec_man'] = int(cap_bits[8])        # Spectrum Management
+        capabils['short_slot'] = int(cap_bits[10])     # Short Slot Time
+        capabils['apsd'] = int(cap_bits[11])           # Automatic Power Save Delivery
+        capabils['radio_meas'] = int(cap_bits[12])     # Radio Measurement
+        capabils['dss_ofdm'] = int(cap_bits[13])       # Direct Spread Spectrum
+        capabils['del_back'] = int(cap_bits[14])       # Delayed Block Acknowledgement
+        capabils['imm_back'] = int(cap_bits[15])       # Immediate Block Acknowledgement
         return capabils
 
     @staticmethod
@@ -1803,11 +1834,11 @@ class Management(Wifi):
         if len(payload) != 12:
             return None, None, None
         idx = 0
-        timestamp = Management.get_timestamp(payload[idx:idx+8])
+        timestamp = Management.get_timestamp(payload[idx:idx + 8])
         idx += 8
-        interval = Management.get_interval(payload[idx:idx+2])
+        interval = Management.get_interval(payload[idx:idx + 2])
         idx += 2
-        capabils = Management.get_fixed_capabils(payload[idx:idx+2])
+        capabils = Management.get_fixed_capabils(payload[idx:idx + 2])
         return timestamp, interval, capabils
 
     @staticmethod
@@ -1859,22 +1890,22 @@ class Management(Wifi):
             -1 on error (invalid v
         """
         vendor_ies = []
-        if mac_block != None:
+        if mac_block is not None:
             if Management.is_valid_mac_oui(mac_block):
                 mac_block = mac_block.upper()
                 if ':' in mac_block:
                     mac_block.replace(':', '-')
             else:
-                logging.warn("invalid oui macblock")
+                logging.warning("invalid oui macblock")
                 return None
 
         for elem in self.tagged_params:
             tag_num = elem['number']
             if MNGMT_TAGS[tag_num] == 'TAG_VENDOR_SPECIFIC_IE':
-                if mac_block == None:
+                if mac_block is None:
                     vendor_ies.append(elem)
                 elif elem['payload']['oui'] == mac_block.encode('ascii'):
-                    if oui_type == None:
+                    if oui_type is None:
                         vendor_ies.append(elem)
                     elif elem['payload']['oui_type'] == oui_type:
                         vendor_ies.append(elem)
@@ -1895,16 +1926,14 @@ class ProbeResp(Management):
                  ('tagged_params', list)]          # tagged parameters
 
     # Wireshark syntax conjugates of fields in object (subfield shark)
-    _s_shark_ = {
-                 'wlan.ta': 'ta',
+    _s_shark_ = {'wlan.ta': 'ta',
                  'wlan.ra': 'ra',
                  'wlan.bssid': 'bssid',
                  'wlan.frag': 'frag_num',
                  'wlan.seq': 'seq_num',
                  'wlan_mgt.fixed.timestamp': 'timestamp',
                  'wlan_mgt.fixed.beacon': 'interval',
-                 'wlan_mgt.tagged.all': 'tagged_params'
-                }
+                 'wlan_mgt.tagged.all': 'tagged_params'}
 
     _sfields_ += Management._capabilities_
 
@@ -1919,21 +1948,20 @@ class ProbeResp(Management):
         self.seq_num = self.frag_num = None
         self.timestamp = self.interval = None
 
-        #fixed capability fields
+        # fixed capability fields
         self.ess = self.ibss = None
         self.privacy = None
         self.priv = self.short_pre = self.pbcc = self.chan_agility = None
         self.spec_man = self.short_slot = self.apsd = self.radio_meas = None
         self.dss_ofdm = self.del_back = self.imm_back = None
 
-        seq_idx, qos_idx, _, self.ta, self.ra, _, self.bssid =\
-                self.strip_mac_addrs()
+        seq_idx, _, _, self.ta, self.ra, _, self.bssid = self.strip_mac_addrs()
 
         idx = seq_idx
         self.seq_num, self.frag_num = self.strip_seq_cntrl(idx)
         idx += 2
 
-        payload = self._packet[idx:idx+12]
+        payload = self._packet[idx:idx + 12]
         timestamp, interval, fixed_capabils = self.strip_fixed_params(payload)
 
         if all([timestamp, interval, fixed_capabils]):
@@ -1947,8 +1975,7 @@ class ProbeResp(Management):
 
         if idx < len(self._packet):
             self._raw_tagged_params = self._packet[idx:]
-            is_out_bound, tagged_params =\
-                self.parse_tagged_params(self._raw_tagged_params)
+            is_out_bound, tagged_params = self.parse_tagged_params(self._raw_tagged_params)
             if len(tagged_params):
                 self.tagged_params = tagged_params
             if is_out_bound:
@@ -1959,7 +1986,6 @@ class ProbeReq(Management):
 
     """Probe Request (type: 0, subtype:4)"""
 
-
     _sfields_ = [('ra', ctypes.c_char_p),       # receiver address
                  ('ta', ctypes.c_char_p),       # transmitter address
                  ('bssid', ctypes.c_char_p),    # basic service set identifier
@@ -1967,14 +1993,12 @@ class ProbeReq(Management):
                  ('seq_num', ctypes.c_uint),    # sequence number
                  ('tagged_params', list)]       # tagged parameters
 
-    _s_shark_ = {
-                 'wlan.ra': 'ra',
+    _s_shark_ = {'wlan.ra': 'ra',
                  'wlan.ta': 'ta',
                  'wlan.bssid': 'bssid',
                  'wlan.frag': 'frag_num',
                  'wlan.seq': 'seq_num',
-                 'wlan_mgt.tagged.all': 'tagged_params'
-                }
+                 'wlan_mgt.tagged.all': 'tagged_params'}
 
     def __init__(self, frame, no_rtap=False):
         """
@@ -1984,20 +2008,19 @@ class ProbeReq(Management):
         self.ta = self.ra = self.bssid = None
         self.seq_num = self.frag_num = None
 
-        seq_idx, qos_idx, _, self.ta, self.ra, _, self.bssid =\
-                self.strip_mac_addrs()
+        seq_idx, _, _, self.ta, self.ra, _, self.bssid = self.strip_mac_addrs()
 
         idx = seq_idx
         self.seq_num, self.frag_num = self.strip_seq_cntrl(idx)
         idx += 2
         if idx < len(self._packet):
             self._raw_tagged_params = self._packet[idx:]
-            is_out_bound, tagged_params =\
-                self.parse_tagged_params(self._raw_tagged_params)
+            is_out_bound, tagged_params = self.parse_tagged_params(self._raw_tagged_params)
             if len(tagged_params):
                 self.tagged_params = tagged_params
             if is_out_bound:
                 logging.error("tag_len header not matched with raw byte counts")
+
 
 class Beacon(Management):
 
@@ -2013,16 +2036,14 @@ class Beacon(Management):
                  ('tagged_params', list)]          # tagged parameters
 
     # Wireshark syntax conjugates of fields in object (subfield shark)
-    _s_shark_ = {
-                 'wlan.ta': 'ta',
+    _s_shark_ = {'wlan.ta': 'ta',
                  'wlan.ra': 'ra',
                  'wlan.bssid': 'bssid',
                  'wlan.frag': 'frag_num',
                  'wlan.seq': 'seq_num',
                  'wlan_mgt.fixed.timestamp': 'timestamp',
                  'wlan_mgt.fixed.beacon': 'interval',
-                 'wlan_mgt.tagged.all': 'tagged_params'
-                }
+                 'wlan_mgt.tagged.all': 'tagged_params'}
 
     _sfields_ += Management._capabilities_
 
@@ -2038,21 +2059,20 @@ class Beacon(Management):
         self.ta = self.ra = self.bssid = None
         self.seq_num = self.frag_num = None
 
-        #fixed capability fields
+        # fixed capability fields
         self.ess = self.ibss = None
         self.privacy = None
         self.priv = self.short_preamble = self.pbcc = self.chan_agility = None
         self.spec_man = self.short_slot = self.apsd = self.radio_meas = None
         self.dss_ofdm = self.del_back = self.imm_back = None
 
-        seq_idx, qos_idx, _, self.ta, self.ra, _, self.bssid =\
-                self.strip_mac_addrs()
+        seq_idx, _, _, self.ta, self.ra, _, self.bssid = self.strip_mac_addrs()
 
         idx = seq_idx
         self.seq_num, self.frag_num = self.strip_seq_cntrl(idx)
         idx += 2
 
-        payload = self._packet[idx:idx+12]
+        payload = self._packet[idx:idx + 12]
         timestamp, interval, fixed_capabils = self.strip_fixed_params(payload)
 
         if all([timestamp, interval, fixed_capabils]):
@@ -2061,22 +2081,22 @@ class Beacon(Management):
             self.set_fixed_capabils(fixed_capabils)
             idx += 12
         else:
-            logging.warn("failed to parse fixed parameters")
+            logging.warning("failed to parse fixed parameters")
             return
 
         if idx < len(self._packet):
             self._raw_tagged_params = self._packet[idx:]
-            is_out_bound, tagged_params =\
-                self.parse_tagged_params(self._raw_tagged_params)
+            is_out_bound, tagged_params = self.parse_tagged_params(self._raw_tagged_params)
             if len(tagged_params):
                 self.tagged_params = tagged_params
             if is_out_bound:
-                logging.warn("tag_len header not matched with raw byte counts")
+                logging.warning("tag_len header not matched with raw byte counts")
 
     def __str__(self):
         frame = "%s from %s (tstamp: %d, interval: %d)"
         frame = frame % (self.name, self.bssid, self.timestamp, self.interval)
         return frame
+
 
 class Control(Wifi):
 
@@ -2091,6 +2111,7 @@ class Control(Wifi):
     def __str__(self):
         return self.name
 
+
 class RTS(Control):
 
     """Request to Send Frame (type: 1, subtype: 1)"""
@@ -2099,10 +2120,8 @@ class RTS(Control):
                  ('ra', ctypes.c_char_p)]   # receiver address
 
     # Wireshark syntax conjugates of fields in object (subfield shark)
-    _s_shark_ = {
-                 'wlan.ta': 'ta',
-                 'wlan.ra': 'ra'
-                }
+    _s_shark_ = {'wlan.ta': 'ta',
+                 'wlan.ra': 'ra'}
 
     def __init__(self, frame, no_rtap=False):
         """Constructor method.
@@ -2117,6 +2136,7 @@ class RTS(Control):
         frame = '%s from %s to %s (duration: %d us)'
         frame = frame % (self.name, self.ta, self.ra, self.duration)
         return frame
+
 
 class CTS(Control):
 
@@ -2140,6 +2160,7 @@ class CTS(Control):
         frame = frame % (self.name, self.ra, self.duration)
         return frame
 
+
 class BACK(Control):
 
     _sfields_ = [('ra', ctypes.c_char_p),           # receiver address
@@ -2152,14 +2173,12 @@ class BACK(Control):
                  ('acked_seqs', list)]              # acknowledged strings              -> in wlan.ba.bm and wlan_mgt.fixed.ssc.sequence
 
     # Wireshark syntax conjugates of fields in object (subfield shark)
-    _s_shark_ = {
-                 'wlan.ra': 'ra',
+    _s_shark_ = {'wlan.ra': 'ra',
                  'wlan.ta': 'ta',
                  'wlan.ba.control.ackpolicy': 'ackpolicy',
                  'wlan.ba.control.multitid': 'multitid',
                  'wlan_mgt.fixed.ssc.fragment': 'ssc_frag',
-                 'wlan_mgt.ssc.sequence': 'ssc_seq'
-                }
+                 'wlan_mgt.ssc.sequence': 'ssc_seq'}
 
     """Block Acknowledgement Frame (type: 1, subtype: 9)"""
 
@@ -2179,28 +2198,27 @@ class BACK(Control):
         self.ta = Wifi.get_mac_addr(ta_mac)
         idx = 16
 
-        payload = self._packet[idx:idx+2]
+        payload = self._packet[idx:idx + 2]
         self.ackpolicy, self.multitid = BACK.strip_cntrl(payload)
         idx += 2
 
-        payload = self._packet[idx:idx+2]
+        payload = self._packet[idx:idx + 2]
         self.ssc_seq, self.ssc_frag = BACK.strip_ssc(payload)
         idx += 2
 
-        payload = self._packet[idx:idx+8]
+        payload = self._packet[idx:idx + 8]
         self.bitmap_str = BACK.strip_bitmap_str(payload)
         idx += 8
 
-        self.acked_seqs =\
-                BACK.extract_acked_seqs(self.bitmap_str, self.ssc_seq)
+        self.acked_seqs = BACK.extract_acked_seqs(self.bitmap_str, self.ssc_seq)
 
     def get_shark_field(self, fields):
         """
         :fields: str[]
         """
         out = super(BACK, self).get_shark_field(fields)
-        out.update({'acked_seqs':self.acked_seqs,
-                    'bitmap_str':self.bitmap_str})
+        out.update({'acked_seqs': self.acked_seqs,
+                    'bitmap_str': self.bitmap_str})
         return out
 
     @staticmethod
@@ -2256,16 +2274,18 @@ class BACK(Control):
         """
         acked_seqs = []
         for idx, val in enumerate(bitmap):
-           if int(val) == 1:
-              seq = (ssc_seq + idx) % 4096
-              acked_seqs.append(seq)
+            if int(val) == 1:
+                seq = (ssc_seq + idx) % 4096
+                acked_seqs.append(seq)
         return acked_seqs
 
     def __str__(self):
         frame = '%s from %s to %s (starting seq: %d, num_acked: %d)'
         frame = frame % (self.name, self.ta, self.ra,
-                self.ssc_seq, len(self.acked_seqs))
+                         self.ssc_seq, len(self.acked_seqs))
         return frame
+
+
 class Unknown(Wifi):
     """
     un-identified packet

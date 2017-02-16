@@ -13,8 +13,7 @@ from pcapfile.test.protocols_linklayer_wifi import TestCase as WifiTest
 from pcapfile.test.protocols_transport_tcp import TestCase as TcpTest
 
 if __name__ == '__main__':
-    TEST_CLASSES = [SavefileTest, LinklayerTest, EthernetTest, WifiTest,
-            TcpTest]
+    TEST_CLASSES = [SavefileTest, LinklayerTest, EthernetTest, WifiTest, TcpTest]
     SUITE = unittest.TestSuite()
     LOADER = unittest.TestLoader()
     for test_class in TEST_CLASSES:

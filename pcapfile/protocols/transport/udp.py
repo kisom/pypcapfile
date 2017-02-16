@@ -6,6 +6,7 @@ import binascii
 import ctypes
 import struct
 
+
 class UDP(ctypes.Structure):
     """
     Represents a UDP packet
@@ -20,6 +21,7 @@ class UDP(ctypes.Structure):
     udp_header_size = 8
 
     def __init__(self, packet, layers=0):
+        super(UDP, self).__init__()
         fields = struct.unpack("!HHHH", packet[:self.udp_header_size])
         self.src_port = fields[0]
         self.dst_port = fields[1]
@@ -34,4 +36,3 @@ class UDP(ctypes.Structure):
 
     def __len__(self):
         return self.udp_header_size + len(self.payload)
-
