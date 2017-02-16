@@ -1,6 +1,15 @@
 pypcapfile
 ==========
 
+.. image:: https://travis-ci.org/kisom/pypcapfile.svg
+    :target: https://travis-ci.org/kisom/pypcapfile
+
+.. image:: https://img.shields.io/pypi/v/pypcapfile.svg
+    :target: https://pypi.python.org/pypi/pypcapfile
+
+.. image:: https://img.shields.io/pypi/pyversions/pypcapfile.svg
+    :target: https://pypi.python.org/pypi/pypcapfile
+
 pypcapfile is a pure Python library for handling libpcap savefiles.
 
 Installing
