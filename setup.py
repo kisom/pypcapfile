@@ -3,31 +3,34 @@
 import os
 from distutils.core import setup
 
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-setup(name='pypcapfile',
-      version='0.12.1',
-      description=('Pure Python package for reading and parsing libpcap '
-                       'savefiles.'),
-      long_description=read('README.rst'),
-      author='Kyle Isom',
-      author_email='coder@kyleisom.net',
-      license='ISC',
-      url='http://kisom.github.com/pypcapfile',
-      scripts=['pcapfile_info',],
-      packages=['pcapfile',
-                'pcapfile.test',
-                'pcapfile.protocols',
-                'pcapfile.protocols.linklayer',
-                'pcapfile.protocols.network',
-                'pcapfile.protocols.transport',
-                ],
-      package_data={'pcapfile.test': ['test/test_data']},
-      data_files=[('share/doc/pcapfile',
-                   ['README.rst', 'AUTHORS', 'CONTRIBUTING'])],
-      classifiers=[
+setup(
+    name='pypcapfile',
+    version='0.12.1',
+    description='Pure Python package for reading and parsing libpcap savefiles',
+    long_description=read('README.rst'),
+    author='Kyle Isom',
+    author_email='coder@kyleisom.net',
+    license='ISC',
+    url='https://kisom.github.com/pypcapfile',
+    scripts=['pcapfile_info'],
+    packages=[
+        'pcapfile',
+        'pcapfile.test',
+        'pcapfile.protocols',
+        'pcapfile.protocols.linklayer',
+        'pcapfile.protocols.network',
+        'pcapfile.protocols.transport',
+    ],
+    package_data={'pcapfile.test': ['test/test_data']},
+    data_files=[
+        ('share/doc/pcapfile', ['README.rst', 'AUTHORS', 'CONTRIBUTING'])
+    ],
+    classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
@@ -35,6 +38,5 @@ setup(name='pypcapfile',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
-        ],
-      )
-
+    ],
+)

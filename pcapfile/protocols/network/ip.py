@@ -28,8 +28,9 @@ class IP(ctypes.Structure):
                 ('pad', ctypes.c_char_p)]       # padding bytes
 
     def __init__(self, packet, layers=0):
+        super(IP, self).__init__()
         # parse the required header first, deal with options later
-        magic = struct.unpack('!B',packet[0:1])[0]
+        magic = struct.unpack('!B', packet[0:1])[0]
         assert ((magic >> 4) == 4 and
                 (magic & 0x0f) > 4), 'not an IPv4 packet.'
 
@@ -55,7 +56,7 @@ class IP(ctypes.Structure):
         else:
             self.opt = b'\x00'
             self.payload = binascii.hexlify(packet[0x14:])
-            self.opt_parsed = { }
+            self.opt_parsed = {}
 
         self.pad = b'\x00'
 
@@ -93,17 +94,18 @@ def strip_ip(packet):
     """
     Remove the IP packet layer, yielding the transport layer.
     """
-    if not type(packet) == IP:
+    if not isinstance(packet, IP):
         packet = IP(packet)
     payload = packet.payload
 
-    if type(payload) == '':
+    if isinstance(payload, str):
         payload = binascii.unhexlify(payload)
     return payload
 
 
 def __call__(packet):
     return IP(packet)
+
 
 def payload_type(protocol):
     if protocol == 0x11:
@@ -115,30 +117,31 @@ def payload_type(protocol):
     else:
         return (None, 'unknown')
 
+
 def parse_options(opt_bytes):
-    opts = { }
+    opts = {}
 
     i = 0
-    l = len(opt_bytes) # unprocessed length
+    l = len(opt_bytes)  # unprocessed length
     while l:
         opt_type = opt_bytes[i]
-        if opt_type == 0: # end
+        if opt_type == 0:  # end
             break
-        if opt_type == 1: # NOP
+        if opt_type == 1:  # NOP
             i += 1
             l -= 1
             continue
 
         if l < 2:
-            break # invalid
-        opt_len = opt_bytes[i+1]
+            break  # invalid
+        opt_len = opt_bytes[i + 1]
         if opt_len < 2 or opt_len > l:
-            break # invalid
+            break  # invalid
 
         # Custom options parsing goes here
         if opt_type == 0x55:
-            if opt_len < 1+1+2+4+8:
-                break # invalid
+            if opt_len < 1 + 1 + 2 + 4 + 8:
+                break  # invalid
             _, _, _, _, uat = struct.unpack('!BBHIQ', opt_bytes[:16])
             opts['uat'] = uat
 

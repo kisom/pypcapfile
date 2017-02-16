@@ -19,6 +19,7 @@ class Ethernet(ctypes.Structure):
     payload = None
 
     def __init__(self, packet, layers=0):
+        super(Ethernet, self).__init__()
         (dst, src, self.type) = struct.unpack('!6s6sH', packet[:14])
 
         dst = bytearray(dst)
@@ -60,11 +61,11 @@ def strip_ethernet(packet):
     """
     Strip the Ethernet frame from a packet.
     """
-    if not type(packet) == Ethernet:
+    if not isinstance(packet, Ethernet):
         packet = Ethernet(packet)
     payload = packet.payload
 
-    if type(payload) == str:
+    if isinstance(payload, str):
         payload = binascii.unhexlify(payload)
     return payload
 

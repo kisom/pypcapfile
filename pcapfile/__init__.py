@@ -13,4 +13,3 @@ class UnknownMagicNumber(Error):
 
 class InvalidHeader(Error):
     pass
-

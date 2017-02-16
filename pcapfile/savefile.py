@@ -28,6 +28,13 @@ def __TRACE__(msg, args=None):
             print(msg)
 
 
+def validate_packet(pkt):
+    # TODO: extended validation
+    if pkt is None:
+        return False
+    return True
+
+
 class pcap_savefile(object):
     """
     Represents a libpcap savefile. The packets member is a list of pcap_packet
@@ -57,11 +64,8 @@ class pcap_savefile(object):
 
         # Validate the packets unless they are to be loaded lazily.
         if isinstance(self.packets, list):
-            # TODO: extended validation
-            valid_packet = lambda pkt: (pkt is not None or
-                                        pkt.issubclass(ctypes.Structure))
-            if not 0 == len(self.packets):
-                valid_packet = [valid_packet(pkt) for pkt in self.packets]
+            if len(self.packets):
+                valid_packet = [validate_packet(pkt) for pkt in self.packets]
                 assert False not in valid_packet, 'Invalid packets in savefile.'
                 if False in valid_packet:
                     return False
@@ -150,7 +154,7 @@ def load_savefile(input_file, layers=0, verbose=False, lazy=False):
 
 
 def __validate_header__(header):
-    if not type(header) == __pcap_header__:
+    if not isinstance(header, __pcap_header__):
         return False
 
     if header.magic not in [_MAGIC_NUMBER, _MAGIC_NUMBER_NS]:
