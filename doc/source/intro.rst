@@ -10,23 +10,24 @@ savefile.
 The core functionality is implemented in pcapfile.savefile: ::
 
     >>> from pcapfile import savefile
-    >>> sf = savefile.load_savefile('test.pcap')
+    >>> testcap = open('test.cap', 'rb')
+    >>> sf = savefile.load_savefile(testcap, verbose=True)
     [+] attempting to load test.pcap
     [+] found valid header
     [+] loaded 11 packets
     [+] finished loading savefile.
-    >>> print sf
+    >>> print(sf)
     big-endian capture file version 2.4
     snapshot length: 65535
     linklayer type: LINKTYPE_ETHERNET
     number of packets: 11
 
-You can a look at the packets in sf.packets: ::
+You can have a look at the packets in sf.packets: ::
 
     >>> pkt = sf.packets[0]
-    >>> p.raw()
+    >>> pkt.raw()
     <binary data snipped>
-    >>> p.timestamp
+    >>> pkt.timestamp
     1343676707L
 
 In the future, pypcapfile will support more enhancements, such as protocol
