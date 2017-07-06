@@ -1,5 +1,5 @@
 """
-IP protocol definitions.
+Ethernet protocol definitions.
 """
 
 import binascii
@@ -27,8 +27,9 @@ class Ethernet(ctypes.Structure):
         self.dst = b':'.join([('%02x' % o).encode('ascii') for o in dst])
         self.src = b':'.join([('%02x' % o).encode('ascii') for o in src])
 
-        payload = binascii.hexlify(packet[14:])
-        self.payload = payload
+        # payload = binascii.hexlify(packet[14:])
+        # self.payload = payload
+        self.payload = packet[14:]
 
         if layers:
             self.load_network(layers)
@@ -45,8 +46,8 @@ class Ethernet(ctypes.Structure):
             ctor = payload_type(self.type)[0]
             if ctor:
                 ctor = ctor
-                payload = binascii.unhexlify(self.payload)
-                self.payload = ctor(payload, layers - 1)
+                # payload = binascii.unhexlify(self.payload)
+                self.payload = ctor(self.payload, layers - 1)
             else:
                 # if no type is found, do not touch the packet.
                 pass
@@ -78,9 +79,12 @@ def payload_type(ethertype):
     if ethertype == 0x0800:
         from pcapfile.protocols.network.ip import IP
         return (IP, 'IPv4')
-#    elif ethertype == 0x0806:
-#        from pcapfile.protocols.network.arp import ARP
-#        return (ARP, 'ARP')
+    elif ethertype == 0x8100:
+        from pcapfile.protocols.ethernet.dot1q import Dot1q
+        return (Dot1q, '802.1Q')
+    elif ethertype == 0x0806:
+        from pcapfile.protocols.network.arp import ARP
+        return (ARP, 'ARP')
 #    elif ethertype == 0x0835:
 #        from pcapfile.protocols.network.rarp import RARP
 #        return (RARP, 'RARP')
@@ -88,4 +92,4 @@ def payload_type(ethertype):
 #        from pcapfile.protocols.network.ipv6 import IPv6
 #        return (IPv6, 'IPv6')
     else:
-        return (None, 'unknown')
+        return (None, "0x%04x" % (ethertype))
