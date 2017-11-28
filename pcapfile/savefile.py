@@ -5,7 +5,6 @@ the core classes pcap_packet and pcap_savefile, as well as the core function
 load_savefile.
 """
 
-import binascii
 import ctypes
 import struct
 import sys
@@ -233,7 +232,7 @@ def _read_a_packet(file_h, hdrp, layers=0):
         raw_packet = linklayer.clookup(hdrp[0].ll_type)(raw_packet_data,
                                                         layers=layers)
     else:
-        raw_packet = binascii.hexlify(raw_packet_data)
+        raw_packet = raw_packet_data
 
     packet = pcap_packet(hdrp, timestamp, timestamp_us, capture_len,
                          packet_len, raw_packet)

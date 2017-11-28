@@ -2,7 +2,6 @@
 Common structs for the package.
 """
 
-import binascii
 import ctypes
 
 
@@ -52,7 +51,7 @@ class pcap_packet(ctypes.Structure):
         """
         Return the raw binary data from the packet.
         """
-        return binascii.unhexlify(self.packet)
+        return self.packet
 
     def __repr__(self):
         if isinstance(self.packet, str):

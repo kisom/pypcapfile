@@ -2,7 +2,6 @@
 UDP transport definition
 """
 
-import binascii
 import ctypes
 import struct
 
@@ -27,11 +26,11 @@ class UDP(ctypes.Structure):
         self.dst_port = fields[1]
         self.len = fields[2]
         self.sum = fields[3]
-        self.payload = ctypes.c_char_p(binascii.hexlify(packet[self.udp_header_size:]))
+        self.payload = ctypes.c_char_p(packet[self.udp_header_size:])
 
     def __str__(self):
         packet = 'udp packet from port %d to port %d carrying %d bytes'
-        packet = packet % (self.src_port, self.dst_port, (len(self.payload) // 2))
+        packet = packet % (self.src_port, self.dst_port, len(self.payload))
         return packet
 
     def __len__(self):

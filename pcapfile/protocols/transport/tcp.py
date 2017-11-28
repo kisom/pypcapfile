@@ -1,8 +1,6 @@
 """
 TCP transport definition
 """
-
-import binascii
 import ctypes
 import struct
 
@@ -55,8 +53,8 @@ class TCP(ctypes.Structure):
             self.opt = b''
             self.payload = b''
         else:
-            self.opt = ctypes.c_char_p(binascii.hexlify(packet[20:self.data_offset]))
-            self.payload = ctypes.c_char_p(binascii.hexlify(packet[self.data_offset:]))
+            self.opt = ctypes.c_char_p(packet[20:self.data_offset])
+            self.payload = ctypes.c_char_p(packet[self.data_offset:])
 
     def __str__(self):
         packet = 'tcp %s packet from port %d to port %d carrying %d bytes'
@@ -71,8 +69,8 @@ class TCP(ctypes.Structure):
             str_flags += 'F'
         if self.urg:
             str_flags += 'U'
-        packet = packet % (str_flags, self.src_port, self.dst_port, (len(self.payload) // 2))
+        packet = packet % (str_flags, self.src_port, self.dst_port, len(self.payload))
         return packet
 
     def __len__(self):
-        return max(self.data_offset, self.tcp_min_header_size) + len(self.payload) // 2
+        return max(self.data_offset, self.tcp_min_header_size) + len(self.payload)

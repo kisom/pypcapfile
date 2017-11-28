@@ -2,7 +2,6 @@
 IP protocol definitions.
 """
 
-import binascii
 import ctypes
 import struct
 
@@ -12,23 +11,19 @@ class Ethernet(ctypes.Structure):
     Represents an Ethernet frame.
     """
 
-    _fields_ = [('dst', ctypes.c_char_p),
-                ('src', ctypes.c_char_p),
-                ('type', ctypes.c_ushort)]
+    _fields_ = [('type', ctypes.c_ushort)]
 
     payload = None
 
     def __init__(self, packet, layers=0):
         super(Ethernet, self).__init__()
         (dst, src, self.type) = struct.unpack('!6s6sH', packet[:14])
+        self.dst = bytearray(dst)
+        self.src = bytearray(src)
+        assert len(self.dst) == 6
+        assert len(self.src) == 6
 
-        dst = bytearray(dst)
-        src = bytearray(src)
-        self.dst = b':'.join([('%02x' % o).encode('ascii') for o in dst])
-        self.src = b':'.join([('%02x' % o).encode('ascii') for o in src])
-
-        payload = binascii.hexlify(packet[14:])
-        self.payload = payload
+        self.payload = packet[14:]
 
         if layers:
             self.load_network(layers)
@@ -45,15 +40,17 @@ class Ethernet(ctypes.Structure):
             ctor = payload_type(self.type)[0]
             if ctor:
                 ctor = ctor
-                payload = binascii.unhexlify(self.payload)
+                payload = self.payload
                 self.payload = ctor(payload, layers - 1)
             else:
                 # if no type is found, do not touch the packet.
                 pass
 
     def __str__(self):
+        dst = b':'.join([('%02x' % o).encode('ascii') for o in self.dst])
+        src = b':'.join([('%02x' % o).encode('ascii') for o in self.src])
         frame = 'ethernet from %s to %s type %s'
-        frame = frame % (self.src, self.dst, payload_type(self.type)[1])
+        frame = frame % (src, dst, payload_type(self.type)[1])
         return frame
 
 
@@ -65,8 +62,6 @@ def strip_ethernet(packet):
         packet = Ethernet(packet)
     payload = packet.payload
 
-    if isinstance(payload, str):
-        payload = binascii.unhexlify(payload)
     return payload
 
 
