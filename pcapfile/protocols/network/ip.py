@@ -2,7 +2,6 @@
 IP protocol definitions.
 """
 
-import binascii
 import ctypes
 import struct
 
@@ -24,7 +23,6 @@ class IP(ctypes.Structure):
                 ('sum', ctypes.c_ushort),       # checksum
                 ('src', ctypes.c_char_p),       # source address
                 ('dst', ctypes.c_char_p),       # destination address
-                ('opt', ctypes.c_char_p),       # IP options
                 ('pad', ctypes.c_char_p)]       # padding bytes
 
     def __init__(self, packet, layers=0):
@@ -50,12 +48,12 @@ class IP(ctypes.Structure):
 
         if self.hl > 5:
             payload_start = self.hl * 4
-            self.opt = binascii.hexlify(packet[0x14:payload_start])
-            self.payload = binascii.hexlify(packet[payload_start:])
-            self.opt_parsed = parse_options(binascii.unhexlify(self.opt))
+            self.opt = packet[0x14:payload_start]
+            self.payload = packet[payload_start:]
+            self.opt_parsed = parse_options(self.opt)
         else:
-            self.opt = b'\x00'
-            self.payload = binascii.hexlify(packet[0x14:])
+            self.opt = b''
+            self.payload = packet[0x14:]
             self.opt_parsed = {}
 
         self.pad = b'\x00'
@@ -68,14 +66,14 @@ class IP(ctypes.Structure):
             ctor = payload_type(self.p)[0]
             if ctor:
                 ctor = ctor
-                payload = binascii.unhexlify(self.payload)
+                payload = self.payload
                 self.payload = ctor(payload, layers - 1)
             else:
                 pass
 
     def __str__(self):
         packet = 'ipv4 packet from %s to %s carrying %d bytes'
-        packet = packet % (self.src, self.dst, (len(self.payload) // 2))
+        packet = packet % (self.src, self.dst, len(self.payload))
         return packet
 
 
@@ -98,8 +96,6 @@ def strip_ip(packet):
         packet = IP(packet)
     payload = packet.payload
 
-    if isinstance(payload, str):
-        payload = binascii.unhexlify(payload)
     return payload
 
 
