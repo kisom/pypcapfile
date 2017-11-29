@@ -22,9 +22,7 @@ class TCP(ctypes.Structure):
                 ('syn', ctypes.c_bool),          # SYN
                 ('fin', ctypes.c_bool),          # FIN
                 ('win', ctypes.c_ushort),        # window size
-                ('sum', ctypes.c_ushort),        # checksum
-                ('opt', ctypes.c_char_p),        # options
-                ('payload', ctypes.c_char_p)]    # packet payload
+                ('sum', ctypes.c_ushort)]        # checksum
 
     tcp_min_header_size = 20
 
@@ -53,8 +51,8 @@ class TCP(ctypes.Structure):
             self.opt = b''
             self.payload = b''
         else:
-            self.opt = ctypes.c_char_p(packet[20:self.data_offset])
-            self.payload = ctypes.c_char_p(packet[self.data_offset:])
+            self.opt = packet[20:self.data_offset]
+            self.payload = packet[self.data_offset:]
 
     def __str__(self):
         packet = 'tcp %s packet from port %d to port %d carrying %d bytes'
