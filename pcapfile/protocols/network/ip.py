@@ -21,8 +21,8 @@ class IP(ctypes.Structure):
                 ('ttl', ctypes.c_ubyte),        # TTL
                 ('p', ctypes.c_ubyte),          # protocol
                 ('sum', ctypes.c_ushort),       # checksum
-                ('src', ctypes.c_char_p),       # source address
-                ('dst', ctypes.c_char_p),       # destination address
+                ('src', ctypes.c_ulong),        # source address
+                ('dst', ctypes.c_ulong),        # destination address
                 ('pad', ctypes.c_char_p)]       # padding bytes
 
     def __init__(self, packet, layers=0):
@@ -43,8 +43,8 @@ class IP(ctypes.Structure):
         self.ttl = fields[5]
         self.p = fields[6]
         self.sum = fields[7]
-        self.src = ctypes.c_char_p(parse_ipv4(fields[8]))
-        self.dst = ctypes.c_char_p(parse_ipv4(fields[9]))
+        self.src = fields[8]
+        self.dst = fields[9]
 
         if self.hl > 5:
             payload_start = self.hl * 4
