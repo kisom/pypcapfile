@@ -15,8 +15,9 @@ TEST_PACKET = [b'010203040506ffeeddccbbaa08004500003cc43800003806',
                b'0306']
 TEST_PACKET = binascii.unhexlify(b''.join(TEST_PACKET))
 
+
 def str_to_ethaddr(x):
-    return binascii.unhexlify(x.translate(None, ':'))
+    return binascii.unhexlify(x.replace(':', ''))
 
 
 class TestCase(unittest.TestCase):
