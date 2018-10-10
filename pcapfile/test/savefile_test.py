@@ -23,7 +23,8 @@ def create_pcap():
         capture = pickle.loads(base64.b64decode(fixture.TESTPCAP3))
     else:  # python2 unsupported pickle protocol: 3
         capture = pickle.loads(fixture.TESTPCAP2.decode('base64'))
-    open(tfile.name, 'wb').write(capture)
+    with open(tfile.name, 'wb') as f:
+        f.write(capture)
     return tfile
 
 
