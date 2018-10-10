@@ -4,6 +4,7 @@ This is the front end to the pcapfile test SUITE.
 """
 
 import unittest
+import sys
 
 
 from pcapfile.test.linklayer_test import TestCase as LinklayerTest
@@ -19,4 +20,6 @@ if __name__ == '__main__':
     LOADER = unittest.TestLoader()
     for test_class in TEST_CLASSES:
         SUITE.addTests(LOADER.loadTestsFromTestCase(test_class))
-    unittest.TextTestRunner(verbosity=2).run(SUITE)
+    result = unittest.TextTestRunner(verbosity=2).run(SUITE)
+    if not result.wasSuccessful():
+        sys.exit(1)
