@@ -8,12 +8,14 @@ import unittest
 from pcapfile import savefile
 from pcapfile.protocols.network.ip import IP
 
+
 def str_to_ipaddr(s):
     octets = s.split('.')
     if len(octets) != 4:
         raise ValueError('Invalid IP address string: ' + s)
     octets = bytearray(map(int, octets))
     return (octets[0] << 24) + (octets[1] << 16) + (octets[2] << 8) + octets[3]
+
 
 class TestCase(unittest.TestCase):
     @classmethod
@@ -46,6 +48,14 @@ class TestCase(unittest.TestCase):
             self.assertTrue(isinstance(packet, IP))
 
     def test_extensive(self):
-        self.assertIp(self.packets[0],
-                src=str_to_ipaddr('192.168.54.1'),
-                dst=str_to_ipaddr('192.168.54.2'))
+        self.assertIp(
+            self.packets[0],
+            src=str_to_ipaddr('192.168.54.1'),
+            dst=str_to_ipaddr('192.168.54.2'))
+
+    def test_timestamp_calc(self):
+        for packet in self.packets:
+            self.assertAlmostEqual(
+                packet.timestamp_us,
+                packet.timestamp_ms * 1000
+            )

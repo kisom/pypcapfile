@@ -1,7 +1,7 @@
 """
 Common structs for the package.
 """
-
+from __future__ import division
 import ctypes
 
 
