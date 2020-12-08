@@ -14,8 +14,7 @@ class UDP(ctypes.Structure):
     _fields_ = [('src_port', ctypes.c_ushort),  # source port
                 ('dst_port', ctypes.c_ushort),  # destination port
                 ('len', ctypes.c_ushort),       # length of header and data
-                ('sum', ctypes.c_ushort),       # checksum
-                ('payload', ctypes.c_char_p)]   # packet payload
+                ('sum', ctypes.c_ushort)]       # checksum
 
     udp_header_size = 8
 
@@ -26,7 +25,7 @@ class UDP(ctypes.Structure):
         self.dst_port = fields[1]
         self.len = fields[2]
         self.sum = fields[3]
-        self.payload = ctypes.c_char_p(packet[self.udp_header_size:])
+        self.payload = packet[self.udp_header_size:]
 
     def __str__(self):
         packet = 'udp packet from port %d to port %d carrying %d bytes'
