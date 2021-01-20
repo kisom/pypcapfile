@@ -217,7 +217,7 @@ def _read_a_packet(file_h, hdrp, layers=0):
 
     # in case the capture file is not the same endianness as ours, we have to
     # use the correct byte order for the packet header
-    if hdrp[0].byteorder == 'big':
+    if hdrp[0].byteorder == b'big':
         packet_header = struct.unpack('>IIII', raw_packet_header)
     else:
         packet_header = struct.unpack('<IIII', raw_packet_header)
