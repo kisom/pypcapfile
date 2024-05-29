@@ -4,7 +4,7 @@ Link layer definitions and lookup functions based on libpcap's LLTYPE_*
 values.
 """
 
-import imp
+import importlib
 import sys
 
 import pcapfile.protocols.linklayer.ethernet as ethernet
@@ -73,13 +73,7 @@ def __load_linktype__(link_type):
     """
 
     try:
-        filep, pathname, description = imp.find_module(link_type, sys.path)
-        link_type_module = imp.load_module(link_type, filep, pathname,
-                                           description)
+        return importlib.import_module(link_type)
     except ImportError:
         return None
-    finally:
-        if filep:
-            filep.close()
 
-    return link_type_module
